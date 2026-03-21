@@ -48,6 +48,11 @@ class NetworkManager {
                 switch response.result {
                 case .success(let data):
                     print("[NET] GET \(endpoint) response size: \(data.count)")
+                    if endpoint.contains("GetFilesByShiftId") || endpoint.contains("GetFiles") {
+                        if let raw = String(data: data, encoding: .utf8) {
+                            print("[NET] RAW FILES RESPONSE: \(raw.prefix(1000))")
+                        }
+                    }
                     do {
                         let value = try Self.jsonDecoder.decode(T.self, from: data)
                         continuation.resume(returning: value)
@@ -261,7 +266,11 @@ class NetworkManager {
                 multipartFormData: { multipartFormData in
                     for (key, value) in fields {
                         if let data = value.data(using: .utf8) {
-                            multipartFormData.append(data, withName: key)
+                            if key == "request" {
+                                multipartFormData.append(data, withName: key, mimeType: "application/json")
+                            } else {
+                                multipartFormData.append(data, withName: key)
+                            }
                         }
                     }
                     for file in files {

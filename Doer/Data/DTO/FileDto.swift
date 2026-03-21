@@ -52,23 +52,23 @@ struct FileUploadModelDto: Codable {
     var basicAuthUid: String = ""
 
     enum CodingKeys: String, CodingKey {
-        case shiftId = "ShiftId"
-        case fileName = "FileName"
-        case fileUrl = "FileUrl"
-        case createdBy = "CreatedBy"
-        case createdByName = "CreatedByName"
-        case createdDate = "CreatedDate"
-        case fileSize = "FileSize"
-        case fileExtension = "FileExtension"
-        case isImage = "IsImage"
-        case thumbnailUrl = "ThumbnailUrl"
-        case lId = "LId"
-        case siteId = "SiteId"
-        case contactId = "ContactID"
-        case userId = "UserID"
-        case errorMessage = "ErrorMessage"
-        case status = "Status"
-        case basicAuthUid = "BasicAuthUid"
+        case shiftId
+        case fileName
+        case fileUrl
+        case createdBy
+        case createdByName
+        case createdDate
+        case fileSize
+        case fileExtension
+        case isImage
+        case thumbnailUrl
+        case lId
+        case siteId
+        case contactId
+        case userId
+        case errorMessage
+        case status
+        case basicAuthUid
     }
 }
 

@@ -314,6 +314,7 @@ private struct BottomComposer: View {
     let onRemoveFile: (String) -> Void
     let onAddFile: (URL, String, String) -> Void
     @State private var selectedPhotoItem: PhotosPickerItem? = nil
+    @State private var previewImage: UIImage? = nil
 
     var body: some View {
         VStack(spacing: 0) {
@@ -346,13 +347,22 @@ private struct BottomComposer: View {
                         HStack(spacing: 8) {
                             ForEach(selectedFiles) { file in
                                 ZStack(alignment: .topTrailing) {
-                                    AsyncImage(url: file.url) { image in
-                                        image.resizable().aspectRatio(contentMode: .fill)
-                                    } placeholder: {
-                                        Color.gray.opacity(0.2)
+                                    if let uiImage = UIImage(contentsOfFile: file.url.path) {
+                                        Image(uiImage: uiImage)
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fill)
+                                            .frame(width: 60, height: 60)
+                                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                                            .onTapGesture { previewImage = uiImage }
+                                    } else {
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .fill(Color.gray.opacity(0.2))
+                                            .frame(width: 60, height: 60)
+                                            .overlay(
+                                                Image(systemName: "doc")
+                                                    .foregroundColor(.gray)
+                                            )
                                     }
-                                    .frame(width: 60, height: 60)
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
 
                                     Button(action: { onRemoveFile(file.filePath) }) {
                                         Image(systemName: "xmark")
@@ -362,6 +372,7 @@ private struct BottomComposer: View {
                                             .background(Color.red)
                                             .clipShape(Circle())
                                     }
+                                    .buttonStyle(.plain)
                                     .offset(x: 4, y: -4)
                                 }
                                 .frame(width: 68, height: 68)
@@ -372,9 +383,18 @@ private struct BottomComposer: View {
 
                 HStack {
                     PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
-                        Text("Image").font(.system(size: 12))
+                        HStack(spacing: 4) {
+                            Image(systemName: "photo")
+                                .font(.system(size: 12))
+                            Text("Image").font(.system(size: 12))
+                        }
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color(hex: "007AFF"))
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(.plain)
                     .frame(height: 36)
                     .onChange(of: selectedPhotoItem) { _, item in
                         guard let item = item else { return }
@@ -414,6 +434,28 @@ private struct BottomComposer: View {
         .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(hex: "#D0D0D0"), lineWidth: 1))
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
+        .fullScreenCover(isPresented: Binding(
+            get: { previewImage != nil },
+            set: { if !$0 { previewImage = nil } }
+        )) {
+            if let image = previewImage {
+                ZStack {
+                    Color.black.ignoresSafeArea()
+                    Image(uiImage: image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .ignoresSafeArea()
+                }
+                .overlay(alignment: .topTrailing) {
+                    Button(action: { previewImage = nil }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 30))
+                            .foregroundColor(.white)
+                    }
+                    .padding(20)
+                }
+            }
+        }
     }
 }
 

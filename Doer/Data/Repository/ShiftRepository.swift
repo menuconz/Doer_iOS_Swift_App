@@ -54,6 +54,7 @@ class ShiftRepository {
                 fields["ShiftSubItemId"] = subItemId
             }
             fields["CreatedBy"] = self.prefs.userId
+            fields["ModifiedBy"] = self.prefs.userId
             fields["SiteId"] = "1"
             fields["LId"] = "1"
             fields["UserID"] = self.prefs.userId

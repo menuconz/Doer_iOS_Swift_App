@@ -56,6 +56,10 @@ class ShiftFilesViewModel {
             let result = await shiftRepository.getShiftFiles(shiftId: shiftId)
             switch result {
             case .success(let data):
+                print("[DEBUG] Files loaded: \(data.count)")
+                for f in data {
+                    print("[DEBUG] File: name='\(f.fileName)' url='\(f.fileUrl)' isImage=\(f.isImage) thumbnail='\(f.thumbnailUrl)'")
+                }
                 files = data
                 fileCountText = data.count
                 isEmpty = data.isEmpty

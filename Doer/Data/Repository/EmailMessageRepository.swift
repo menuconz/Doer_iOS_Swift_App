@@ -42,17 +42,18 @@ class EmailMessageRepository {
         attachments: [(data: Data, fileName: String)]
     ) async -> ApiResult<EmailMessageDto> {
         return await safeApiCall {
-            var fields: [String: String] = [:]
-            fields["jobId"] = String(jobId)
-            fields["toEmail"] = toEmail
-            fields["subject"] = subject
-            fields["body"] = body
-            fields["ccEmail"] = ccEmail
-            fields["lId"] = "1"
-            fields["siteId"] = "1"
-            fields["userID"] = self.prefs.userId
-            fields["basicAuthUid"] = self.prefs.basicAuthUid
+            let requestJson: [String: Any] = [
+                "UserID": self.prefs.userId,
+                "JobId": jobId,
+                "ToEmail": toEmail,
+                "Subject": subject,
+                "Body": body,
+                "CcEmail": ccEmail
+            ]
+            let jsonData = try JSONSerialization.data(withJSONObject: requestJson)
+            let jsonString = String(data: jsonData, encoding: .utf8) ?? "{}"
 
+            let fields: [String: String] = ["request": jsonString]
             let files = attachments.map { file in
                 (data: file.data, name: "attachments", fileName: file.fileName, mimeType: NetworkManager.getMimeType(file.fileName))
             }
@@ -65,18 +66,19 @@ class EmailMessageRepository {
         attachments: [(data: Data, fileName: String)]
     ) async -> ApiResult<EmailMessageDto> {
         return await safeApiCall {
-            var fields: [String: String] = [:]
-            fields["jobId"] = String(jobId)
-            fields["subItemId"] = String(subItemId)
-            fields["toEmail"] = toEmail
-            fields["subject"] = subject
-            fields["body"] = body
-            fields["ccEmail"] = ccEmail
-            fields["lId"] = "1"
-            fields["siteId"] = "1"
-            fields["userID"] = self.prefs.userId
-            fields["basicAuthUid"] = self.prefs.basicAuthUid
+            let requestJson: [String: Any] = [
+                "UserID": self.prefs.userId,
+                "JobId": jobId,
+                "SubItemId": subItemId,
+                "ToEmail": toEmail,
+                "Subject": subject,
+                "Body": body,
+                "CcEmail": ccEmail
+            ]
+            let jsonData = try JSONSerialization.data(withJSONObject: requestJson)
+            let jsonString = String(data: jsonData, encoding: .utf8) ?? "{}"
 
+            let fields: [String: String] = ["request": jsonString]
             let files = attachments.map { file in
                 (data: file.data, name: "attachments", fileName: file.fileName, mimeType: NetworkManager.getMimeType(file.fileName))
             }

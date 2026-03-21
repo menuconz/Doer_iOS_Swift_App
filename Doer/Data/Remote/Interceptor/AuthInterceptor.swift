@@ -9,7 +9,11 @@ class AuthInterceptor: RequestInterceptor {
         if !token.isEmpty {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        // Don't override Content-Type for multipart uploads (Alamofire sets it automatically)
+        let existingContentType = urlRequest.value(forHTTPHeaderField: "Content-Type") ?? ""
+        if !existingContentType.contains("multipart") {
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        }
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         completion(.success(request))
     }

@@ -70,7 +70,9 @@ struct ShiftFilesScreen: View {
                     ForEach(Array(viewModel.files.enumerated()), id: \.offset) { index, file in
                         ShiftFileCard(file: file) {
                             let fullUrl = SHIFT_DOCS_SERVER_URL + file.fileUrl
-                            onViewDocument(fullUrl, file.isImage)
+                            let ext = (file.fileUrl as NSString).pathExtension.lowercased()
+                            let isImg = ["jpg", "jpeg", "png", "gif", "bmp", "webp"].contains(ext)
+                            onViewDocument(fullUrl, isImg)
                         }
                         .listRowInsets(EdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8))
                         .listRowSeparator(.hidden)
@@ -134,7 +136,10 @@ struct ShiftFilesScreen: View {
             guard let item = item else { return }
             Task {
                 if let data = try? await item.loadTransferable(type: Data.self) {
-                    let fileName = "image_\(UUID().uuidString).jpg"
+                    let dateFormatter = DateFormatter()
+                    dateFormatter.dateFormat = "yyyyMMdd_HHmmss"
+                    let timestamp = dateFormatter.string(from: Date())
+                    let fileName = "IMG_\(timestamp).jpg"
                     let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
                     try? data.write(to: tempURL)
                     viewModel.uploadFiles([tempURL])
@@ -150,10 +155,15 @@ private struct ShiftFileCard: View {
     let file: FileUploadModelDto
     let onTap: () -> Void
 
+    private var isImageFile: Bool {
+        let ext = (file.fileUrl as NSString).pathExtension.lowercased()
+        return ["jpg", "jpeg", "png", "gif", "bmp", "webp"].contains(ext)
+    }
+
     var body: some View {
         HStack(spacing: 12) {
-            if file.isImage && !file.thumbnailUrl.isEmpty {
-                AsyncImage(url: URL(string: file.thumbnailUrl.hasPrefix("http") ? file.thumbnailUrl : "https://doerapi.doer.nz/userDocuments/" + file.thumbnailUrl)) { image in
+            if isImageFile {
+                AsyncImage(url: URL(string: "https://doerapi.doer.nz/userDocuments/" + file.fileUrl)) { image in
                     image.resizable().aspectRatio(contentMode: .fill)
                 } placeholder: {
                     Color.gray.opacity(0.2)

@@ -287,19 +287,40 @@ class SubItemMessagesViewModel {
             let jobIdToUse = jobId > 0 ? jobId : shiftId
             let toEmail = recipients.joined(separator: ",")
 
-            let request = NewEmailRequestDto(
-                jobId: jobIdToUse,
-                toEmail: toEmail,
-                subject: subject,
-                body: text,
-                ccEmail: "",
-                lId: 1,
-                siteId: 1,
-                contactId: contactId,
-                userId: userId,
-                basicAuthUid: basicAuthUid
-            )
-            let result = await emailMessageRepository.sendNewEmail(request: request)
+            let result: ApiResult<EmailMessageDto>
+
+            if !selectedFiles.isEmpty {
+                var attachments: [(data: Data, fileName: String)] = []
+                for file in selectedFiles {
+                    if let data = try? Data(contentsOf: file.url) {
+                        attachments.append((data: data, fileName: file.fileName))
+                    }
+                }
+                result = await emailMessageRepository.sendNewSubItemEmailWithAttachments(
+                    jobId: jobIdToUse,
+                    subItemId: subItemId,
+                    toEmail: toEmail,
+                    subject: subject,
+                    body: text,
+                    ccEmail: "",
+                    attachments: attachments
+                )
+            } else {
+                let request = NewEmailRequestDto(
+                    jobId: jobIdToUse,
+                    toEmail: toEmail,
+                    subject: subject,
+                    body: text,
+                    ccEmail: "",
+                    lId: 1,
+                    siteId: 1,
+                    contactId: contactId,
+                    userId: userId,
+                    basicAuthUid: basicAuthUid
+                )
+                result = await emailMessageRepository.sendNewEmail(request: request)
+            }
+
             switch result {
             case .success:
                 isSending = false

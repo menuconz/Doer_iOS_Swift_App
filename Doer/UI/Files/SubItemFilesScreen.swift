@@ -1,5 +1,6 @@
 import SwiftUI
 import UniformTypeIdentifiers
+import PhotosUI
 
 private let BluePrimary = Color(hex: "#3B82F6")
 private let DarkText = Color(hex: "#1F2937")
@@ -16,6 +17,8 @@ struct SubItemFilesScreen: View {
 
     @State private var viewModel: SubItemFilesViewModel
     @State private var showingFilePicker = false
+    @State private var showingImagePicker = false
+    @State private var selectedPhotoItem: PhotosPickerItem? = nil
 
     init(shiftId: String, subItemId: String, onBack: @escaping () -> Void, onViewDocument: @escaping (String, Bool) -> Void) {
         self.onBack = onBack
@@ -58,7 +61,9 @@ struct SubItemFilesScreen: View {
                     ForEach(Array(viewModel.files.enumerated()), id: \.offset) { _, file in
                         SubItemFileCard(file: file) {
                             let fullUrl = SHIFT_DOCS_SERVER_URL + file.fileUrl
-                            onViewDocument(fullUrl, file.isImage)
+                            let ext = (file.fileUrl as NSString).pathExtension.lowercased()
+                            let isImg = ["jpg", "jpeg", "png", "gif", "bmp", "webp"].contains(ext)
+                            onViewDocument(fullUrl, isImg)
                         }
                         .listRowInsets(EdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8))
                         .listRowSeparator(.hidden)
@@ -96,12 +101,28 @@ struct SubItemFilesScreen: View {
             }
         }
         .confirmationDialog("Select Upload Option", isPresented: $viewModel.showUploadOptions) {
-            Button("Upload from Gallery") { showingFilePicker = true }
+            Button("Upload from Gallery") { showingImagePicker = true }
             Button("Upload from Files") { showingFilePicker = true }
             Button("Cancel", role: .cancel) {}
         }
         .fileImporter(isPresented: $showingFilePicker, allowedContentTypes: [.pdf, .png, .jpeg], allowsMultipleSelection: true) { result in
             if case .success(let urls) = result { viewModel.uploadFiles(urls) }
+        }
+        .photosPicker(isPresented: $showingImagePicker, selection: $selectedPhotoItem, matching: .images)
+        .onChange(of: selectedPhotoItem) { _, item in
+            guard let item = item else { return }
+            Task {
+                if let data = try? await item.loadTransferable(type: Data.self) {
+                    let dateFormatter = DateFormatter()
+                    dateFormatter.dateFormat = "yyyyMMdd_HHmmss"
+                    let timestamp = dateFormatter.string(from: Date())
+                    let fileName = "IMG_\(timestamp).jpg"
+                    let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+                    try? data.write(to: tempURL)
+                    viewModel.uploadFiles([tempURL])
+                }
+                selectedPhotoItem = nil
+            }
         }
         .snackbar(message: Binding(get: { viewModel.errorMessage ?? viewModel.successMessage }, set: { _ in viewModel.clearError(); viewModel.clearSuccessMessage() }))
     }
@@ -111,10 +132,15 @@ private struct SubItemFileCard: View {
     let file: FileUploadModelDto
     let onTap: () -> Void
 
+    private var isImageFile: Bool {
+        let ext = (file.fileUrl as NSString).pathExtension.lowercased()
+        return ["jpg", "jpeg", "png", "gif", "bmp", "webp"].contains(ext)
+    }
+
     var body: some View {
         HStack(spacing: 12) {
-            if file.isImage && !file.thumbnailUrl.isEmpty {
-                AsyncImage(url: URL(string: file.thumbnailUrl.hasPrefix("http") ? file.thumbnailUrl : "https://doerapi.doer.nz/userDocuments/" + file.thumbnailUrl)) { image in
+            if isImageFile {
+                AsyncImage(url: URL(string: "https://doerapi.doer.nz/userDocuments/" + file.fileUrl)) { image in
                     image.resizable().aspectRatio(contentMode: .fill)
                 } placeholder: { Color.gray.opacity(0.2) }
                 .frame(width: 60, height: 60)
