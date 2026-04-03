@@ -18,6 +18,8 @@ class ViewQuotationsViewModel {
     var placeList: [PlacePrediction] = []
     var showPlaceList: Bool = false
     var showFilterSheet: Bool = false
+    var showHireConfirmation: Bool = false
+    var pendingHireQuotation: JobQuotationDto? = nil
 
     private let shiftId: Int
     private var shift: ShiftDto? = nil
@@ -187,7 +189,14 @@ class ViewQuotationsViewModel {
     }
 
     func hireContractor(_ quotation: JobQuotationDto) {
-        guard let currentShift = shift else { return }
+        pendingHireQuotation = quotation
+        showHireConfirmation = true
+    }
+
+    func confirmHire() {
+        guard let quotation = pendingHireQuotation, let currentShift = shift else { return }
+        showHireConfirmation = false
+        pendingHireQuotation = nil
         isHiring = true
         errorMessage = nil
 
@@ -205,14 +214,18 @@ class ViewQuotationsViewModel {
             switch result {
             case .success:
                 isHiring = false
-                successMessage = "Contractor Hired Sucessfully"
-                isHired = true
+                successMessage = "Contractor Hired Successfully"
             case .error(let message, _):
                 isHiring = false
                 errorMessage = (message ?? "").isEmpty ? "There was a problem in Hiring Contractor" : message
             case .loading: break
             }
         }
+    }
+
+    func cancelHire() {
+        showHireConfirmation = false
+        pendingHireQuotation = nil
     }
 
     func formatDate(_ dateStr: String?) -> String {

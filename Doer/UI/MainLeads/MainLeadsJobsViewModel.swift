@@ -19,8 +19,9 @@ struct JobRowItem: Identifiable {
     var isOwner: Bool = false
     var isAddSubItem: Bool = false
     var newSubItemName: String = ""
+    var updateToken: UUID = UUID()
 
-    var id: Int { shift.id }
+    var id: String { "\(shift.id)-\(updateToken)" }
 }
 
 struct MLFilterColumnOption: Identifiable {
@@ -143,7 +144,7 @@ class MainLeadsJobsViewModel {
 
     private var originalJobs: [JobRowItem] = []
     private var currentSkip: Int = 0
-    private let pageSize: Int = 20
+    private let pageSize: Int = 100
 
     private let shiftRepository: ShiftRepository
     private let clientRepository: ClientRepository
@@ -174,6 +175,11 @@ class MainLeadsJobsViewModel {
     func loadInitialData() {
         guard !hasLoaded else { return }
         hasLoaded = true
+        loadClients()
+        loadJobs()
+    }
+
+    func refreshData() {
         loadClients()
         loadJobs()
     }
@@ -316,7 +322,16 @@ class MainLeadsJobsViewModel {
                 contractTypeColor: Self.getContractTypeColor(shift.contractType),
                 hsFormText: Self.getHSFormText(shift.hsForms),
                 hsFormColor: Self.getHSFormColor(shift.hsForms),
-                subItems: shift.shiftSubItems ?? [],
+                subItems: (shift.shiftSubItems ?? []).map { item in
+                    var enriched = item
+                    if enriched.dateStartedString.isEmpty, let ds = enriched.dateStarted, !ds.isEmpty {
+                        enriched.dateStartedString = Self.formatSubItemDate(ds)
+                    }
+                    if enriched.dateCompletedString.isEmpty, let dc = enriched.dateCompleted, !dc.isEmpty {
+                        enriched.dateCompletedString = Self.formatSubItemDate(dc)
+                    }
+                    return enriched
+                },
                 isOwner: isOwner,
                 isAddSubItem: isOwner
             )
@@ -615,6 +630,7 @@ class MainLeadsJobsViewModel {
             let dateTimeStr = formatter.string(from: dt)
             var updated = subItem
             updated.dateStarted = dateTimeStr
+            updated.dateStartedString = Self.formatSubItemDate(dateTimeStr)
             dismissEditDialog()
             updateSubItem(updated)
         }
@@ -760,7 +776,8 @@ class MainLeadsJobsViewModel {
                 isExpanded: row.isExpanded,
                 isOwner: row.isOwner,
                 isAddSubItem: row.isAddSubItem,
-                newSubItemName: row.newSubItemName
+                newSubItemName: row.newSubItemName,
+                updateToken: UUID()
             )
         }
 
@@ -782,11 +799,30 @@ class MainLeadsJobsViewModel {
         }
     }
 
+    private static func formatSubItemDate(_ dateStr: String) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        let cleaned = String(dateStr.prefix(19))
+        guard let date = formatter.date(from: cleaned) else { return dateStr }
+        formatter.dateFormat = "dd MMM yyyy, h:mm a"
+        formatter.locale = Locale(identifier: "en_US")
+        return formatter.string(from: date)
+    }
+
     private func updateSubItemInPlace(_ updatedSubItem: ShiftSubItemDto) {
+        var enriched = updatedSubItem
+        if enriched.dateStartedString.isEmpty, let ds = enriched.dateStarted, !ds.isEmpty {
+            enriched.dateStartedString = Self.formatSubItemDate(ds)
+        }
+        if enriched.dateCompletedString.isEmpty, let dc = enriched.dateCompleted, !dc.isEmpty {
+            enriched.dateCompletedString = Self.formatSubItemDate(dc)
+        }
+
         func updateRow(_ row: JobRowItem) -> JobRowItem {
-            guard row.shift.id == updatedSubItem.shiftId else { return row }
+            guard row.shift.id == enriched.shiftId else { return row }
             let updatedSubItems = row.subItems.map { sub in
-                sub.id == updatedSubItem.id ? updatedSubItem : sub
+                sub.id == enriched.id ? enriched : sub
             }
             var s = row.shift
             s.shiftSubItems = updatedSubItems
@@ -797,7 +833,8 @@ class MainLeadsJobsViewModel {
                 contractTypeColor: row.contractTypeColor, hsFormText: row.hsFormText,
                 hsFormColor: row.hsFormColor, subItems: updatedSubItems,
                 isExpanded: row.isExpanded, isOwner: row.isOwner,
-                isAddSubItem: row.isAddSubItem, newSubItemName: row.newSubItemName
+                isAddSubItem: row.isAddSubItem, newSubItemName: row.newSubItemName,
+                updateToken: UUID()
             )
         }
         originalJobs = originalJobs.map { updateRow($0) }
@@ -863,6 +900,7 @@ class MainLeadsJobsViewModel {
     }
 
     func deleteSubItem(_ subItemId: Int) {
+        dismissEditDialog()
         Task { @MainActor in
             let result = await shiftRepository.deleteSubItem(id: subItemId)
             switch result {

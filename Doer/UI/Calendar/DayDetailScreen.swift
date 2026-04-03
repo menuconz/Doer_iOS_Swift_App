@@ -20,7 +20,7 @@ struct DayDetailScreen: View {
             .loadingOverlay(viewModel.isLoading)
             .navigationTitle(viewModel.pageTitle)
             .navigationBarTitleDisplayMode(.inline)
-            .onAppear { viewModel.loadInitialData() }
+            .onAppear { viewModel.refreshData() }
             .alert("Delete Sub-Item", isPresented: Binding(
                 get: { viewModel.activeDialog == .deleteSubItem },
                 set: { if !$0 { viewModel.dismissDialog() } }

@@ -222,6 +222,13 @@ class DayDetailViewModel {
         }
     }
 
+    func refreshData() {
+        Task { @MainActor in
+            await loadClients()
+            await loadShifts()
+        }
+    }
+
     private static func todayString() -> String {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"

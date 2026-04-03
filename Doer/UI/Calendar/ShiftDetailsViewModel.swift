@@ -81,6 +81,7 @@ class ShiftDetailsViewModel {
     var hasReminderSet: Bool = false
     var showReminderSection: Bool = true
     var navigateToFeedbackShiftId: Int? = nil
+    var navigateToReviewsShiftId: Int? = nil
 
     // Private
     private let shiftRepository: ShiftRepository
@@ -390,7 +391,11 @@ class ShiftDetailsViewModel {
     }
 
     func viewReviews() {
-        successMessage = "Reviews screen not yet implemented"
+        navigateToReviewsShiftId = shiftId
+    }
+
+    func onReviewsNavigated() {
+        navigateToReviewsShiftId = nil
     }
 
     func updateIsAllDay(_ isAllDay: Bool) {

@@ -17,11 +17,23 @@
 	<key>CFBundlePackageType</key>
 	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.62</string>
+	<string>2.0</string>
 	<key>CFBundleVersion</key>
-	<string>62</string>
+	<string>500</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>MAPS_API_KEY</key>
+	<string>AIzaSyA2yi5a-gBUHbkYvnc9rLiRoeUd5WONBMs</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Doer needs access to your camera to take photos for document uploads.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Doer needs your location to track your position during active shifts.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Doer needs your location to track your position during active shifts.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Doer needs your location to show nearby jobs and track shifts.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Doer needs access to your photo library to upload documents.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -43,17 +55,12 @@
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 	</array>
-	<key>NSCameraUsageDescription</key>
-	<string>Doer needs access to your camera to take photos for document uploads.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Doer needs your location to show nearby jobs and track shifts.</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Doer needs your location to track your position during active shifts.</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>Doer needs your location to track your position during active shifts.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Doer needs access to your photo library to upload documents.</string>
-	<key>MAPS_API_KEY</key>
-	<string>AIzaSyA2yi5a-gBUHbkYvnc9rLiRoeUd5WONBMs</string>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
 </dict>
 </plist>

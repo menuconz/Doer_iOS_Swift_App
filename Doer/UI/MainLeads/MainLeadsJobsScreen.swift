@@ -152,7 +152,7 @@ struct MainLeadsJobsScreen: View {
             editDialogSheet
         }
         .onAppear {
-            viewModel.loadInitialData()
+            viewModel.refreshData()
         }
     }
 
@@ -536,33 +536,44 @@ struct MainLeadsJobsScreen: View {
                 ZStack {
                     Rectangle().stroke(borderColor, lineWidth: 0.5)
                     Button(action: { onViewFiles(row.shift.id) }) {
-                        Text("\u{1F517}")
+                        Image(systemName: "folder")
                             .font(.system(size: 14))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Color(hex: "007AFF"))
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
                     }
-                    .buttonStyle(.bordered)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .buttonStyle(.plain)
                 }
                 .frame(width: colFiles, height: 55)
 
                 // Actions
                 ZStack {
                     Rectangle().stroke(borderColor, lineWidth: 0.5)
-                    HStack(spacing: 3) {
+                    HStack(spacing: 5) {
                         Button(action: { onShiftDetails(row.shift.id) }) {
-                            Text("\u{1F441}")
-                                .font(.system(size: 14))
+                            Image(systemName: "eye")
+                                .font(.system(size: 13))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
+                                .background(Color(hex: "007AFF"))
+                                .clipShape(RoundedRectangle(cornerRadius: 6))
                         }
-                        .buttonStyle(.bordered)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .buttonStyle(.plain)
 
                         if row.shift.hasQuotations {
                             Button(action: { onViewQuotations(row.shift.id) }) {
                                 Text("View Quotations")
-                                    .font(.system(size: 12, weight: .bold))
-                                    .foregroundColor(Color(hex: "#667685"))
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 6)
+                                    .background(DoerTheme.primary)
+                                    .clipShape(RoundedRectangle(cornerRadius: 6))
                             }
-                            .buttonStyle(.bordered)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .buttonStyle(.plain)
                         }
                     }
                 }
@@ -751,29 +762,31 @@ struct MainLeadsJobsScreen: View {
             )
 
             // Files button
-            ZStack {
-                Color.white
-                Button(action: { onViewSubItemFiles(shiftId, subItem.id) }) {
-                    Text("\u{1F517}")
-                        .font(.system(size: 10))
-                }
-                .buttonStyle(.bordered)
-                .frame(width: 35, height: 35)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+            Button(action: { onViewSubItemFiles(shiftId, subItem.id) }) {
+                Image(systemName: "folder")
+                    .font(.system(size: 12))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(Color(hex: "007AFF"))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
             }
+            .buttonStyle(.plain)
             .frame(width: subColFiles, height: 65)
             .overlay(Rectangle().stroke(Color(hex: "#E5E7EB"), lineWidth: 0.5))
 
             // Delete button (owner only)
             if viewModel.isOwner {
-                ZStack {
-                    Color.white
-                    Button(action: { viewModel.confirmDeleteSubItem(subItem.id) }) {
-                        Image(systemName: "trash")
-                            .foregroundColor(.red)
-                            .font(.system(size: 18))
-                    }
+                Button(action: { viewModel.confirmDeleteSubItem(subItem.id) }) {
+                    Image(systemName: "trash")
+                        .font(.system(size: 14))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(Color(hex: "FF3B30"))
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
                 }
+                .buttonStyle(.plain)
                 .frame(width: subColDelete, height: 65)
                 .overlay(Rectangle().stroke(Color(hex: "#E5E7EB"), lineWidth: 0.5))
             }
@@ -834,7 +847,7 @@ struct MainLeadsJobsScreen: View {
             .overlay(Rectangle().stroke(greenPrimary, lineWidth: 2))
 
             // Empty placeholder cells
-            ForEach([subColHS, subColStatus, subColStarted, subColCompleted, subColFiles], id: \.self) { w in
+            ForEach(Array([subColHS, subColStatus, subColStarted, subColCompleted, subColFiles].enumerated()), id: \.offset) { _, w in
                 Color.clear
                     .frame(width: w, height: 50)
                     .background(addSubItemBg)
@@ -1132,7 +1145,7 @@ private struct MLTextEditorSheet: View {
 
             Spacer()
         }
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.large])
     }
 }
 
@@ -1173,9 +1186,11 @@ private struct MLDateTimePickerSheet: View {
             DatePicker("Date", selection: $date, displayedComponents: .date)
                 .datePickerStyle(.graphical)
                 .padding(.horizontal, 16)
+                .tint(Color(hex: "007AFF"))
 
             DatePicker("Time", selection: $time, displayedComponents: .hourAndMinute)
                 .padding(.horizontal, 16)
+                .tint(Color(hex: "007AFF"))
 
             Spacer()
         }
@@ -1222,7 +1237,7 @@ private struct MLStatusPickerSheet: View {
 
             Spacer()
         }
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.large])
     }
 }
 
@@ -1297,7 +1312,7 @@ private struct MLAddressSearchSheet: View {
 
             Spacer()
         }
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.large])
     }
 }
 
@@ -1343,7 +1358,7 @@ private struct MLClientPickerSheet: View {
 
             Spacer()
         }
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.large])
     }
 }
 
@@ -1389,6 +1404,6 @@ private struct MLDeleteConfirmSheet: View {
 
             Spacer()
         }
-        .presentationDetents([.height(250)])
+        .presentationDetents([.large])
     }
 }

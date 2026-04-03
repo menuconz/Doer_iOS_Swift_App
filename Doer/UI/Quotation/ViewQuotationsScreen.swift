@@ -133,11 +133,15 @@ struct ViewQuotationsScreen: View {
                                     Button(action: { viewModel.hireContractor(quotation) }) {
                                         Text("Hire")
                                             .font(.system(size: 14, weight: .bold))
-                                            .foregroundColor(FilterText)
+                                            .foregroundColor(DoerTheme.primary)
+                                            .padding(.horizontal, 16)
+                                            .padding(.vertical, 6)
+                                            .background(Color.white)
+                                            .overlay(RoundedRectangle(cornerRadius: 6).stroke(DoerTheme.primary, lineWidth: 1))
+                                            .clipShape(RoundedRectangle(cornerRadius: 6))
                                     }
+                                    .buttonStyle(.plain)
                                     .frame(width: ColAction, height: 50)
-                                    .background(Color.white)
-                                    .overlay(RoundedRectangle(cornerRadius: 2).stroke(Color.black, lineWidth: 1))
                                     .overlay(Rectangle().stroke(CellBorderColor, lineWidth: 1))
                                     .disabled(viewModel.isHiring)
                                 }
@@ -167,12 +171,26 @@ struct ViewQuotationsScreen: View {
                 ProgressView()
             }
         }
-        .onChange(of: viewModel.isHired) { _, hired in
-            if hired { onBack() }
+        .alert("Hire Contractor", isPresented: $viewModel.showHireConfirmation) {
+            Button("Yes") { viewModel.confirmHire() }
+            Button("No", role: .cancel) { viewModel.cancelHire() }
+        } message: {
+            Text("Do you want to hire this contractor?")
+        }
+        .alert("Success", isPresented: Binding(
+            get: { viewModel.successMessage != nil },
+            set: { if !$0 { viewModel.successMessage = nil } }
+        )) {
+            Button("OK") {
+                viewModel.successMessage = nil
+                onBack()
+            }
+        } message: {
+            Text(viewModel.successMessage ?? "")
         }
         .snackbar(message: Binding(
-            get: { viewModel.errorMessage ?? viewModel.successMessage },
-            set: { _ in viewModel.clearError(); viewModel.clearSuccess() }
+            get: { viewModel.errorMessage },
+            set: { _ in viewModel.clearError() }
         ))
     }
 }
@@ -227,10 +245,19 @@ private struct FilterQuotationsSheet: View {
             HStack {
                 Spacer()
                 Button("Clear All") { viewModel.clearFilter() }
+                    .foregroundColor(Color(hex: "FF3B30"))
                     .padding(.horizontal, 10).padding(.vertical, 5)
-                Button("Apply") { viewModel.applyFilter() }
-                    .buttonStyle(.borderedProminent)
-                    .padding(.horizontal, 10).padding(.vertical, 5)
+                    .overlay(RoundedRectangle(cornerRadius: 5).stroke(Color(hex: "#DDDDDD"), lineWidth: 1))
+                Button(action: { viewModel.applyFilter() }) {
+                    Text("Apply")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color(hex: "007AFF"))
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                }
+                .buttonStyle(.plain)
                 Spacer()
             }
 

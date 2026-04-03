@@ -279,6 +279,12 @@ struct ShiftDetailsScreen: View {
                 path.append(Route.sendFeedback(shiftId: shiftId))
             }
         }
+        .onChange(of: viewModel.navigateToReviewsShiftId) { _, newValue in
+            if let shiftId = newValue {
+                viewModel.onReviewsNavigated()
+                path.append(Route.reviews(shiftId: shiftId))
+            }
+        }
         .onChange(of: viewModel.errorMessage) { _, newValue in
             if let msg = newValue {
                 showToast(msg)
