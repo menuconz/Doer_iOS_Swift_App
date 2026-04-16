@@ -1,0 +1,6 @@
+// Doer iOS app — local secrets. DO NOT COMMIT this file.
+// This is gitignored. Each developer should keep their own copy.
+
+// Google Maps / Navigation SDK key. Rotate in Google Cloud Console and restrict
+// to iOS bundle identifier nz.co.doer + Maps SDK + Navigation SDK + Places.
+MAPS_API_KEY = AIzaSyDCmj86d3XA-GvAonJowP1ujnzCf7TDKAE

@@ -241,6 +241,7 @@ struct EditProfileScreen: View {
                     .padding(.horizontal, 20)
                     .padding(.vertical, 30)
                 }
+                .scrollDismissesKeyboard(.interactively)
                 .background(BgColor)
             }
         }

@@ -248,6 +248,7 @@ class SubItemMessagesViewModel {
             let role = preferencesManager.role
 
             let mentionedEmails = extractMentionedEmails(text)
+            let textLower = text.lowercased()
             var recipients: [String] = []
 
             let shiftResult = await shiftRepository.getShiftById(id: shiftId)
@@ -256,6 +257,12 @@ class SubItemMessagesViewModel {
 
             if !mentionedEmails.isEmpty {
                 recipients.append(contentsOf: mentionedEmails)
+            } else if textLower.contains("@everyone") {
+                recipients.append(contentsOf: await getAllUserEmails())
+            } else if textLower.contains("@scheduling team") {
+                recipients.append(contentsOf: await getSchedulingTeamEmails(jobId: shiftId))
+            } else if textLower.contains("@filokreto team") {
+                recipients.append(contentsOf: await getFiloKretoTeamEmails())
             } else {
                 if isManager, let shift = shiftDetails, !shift.caregiverId.isEmpty {
                     if case .success(let contractor) = await accountRepository.getUser(id: shift.caregiverId) {
@@ -334,6 +341,27 @@ class SubItemMessagesViewModel {
             case .loading: break
             }
         }
+    }
+
+    private func getAllUserEmails() async -> [String] {
+        if case .success(let users) = await accountRepository.getAllUsersWithAdmin() {
+            return Array(Set(users.filter { !$0.email.isEmpty }.map { $0.email }))
+        }
+        return []
+    }
+
+    private func getSchedulingTeamEmails(jobId: Int) async -> [String] {
+        if case .success(let users) = await shiftRepository.getAllUsersByJobId(jobId: jobId) {
+            return Array(Set(users.filter { !$0.email.isEmpty }.map { $0.email }))
+        }
+        return []
+    }
+
+    private func getFiloKretoTeamEmails() async -> [String] {
+        if case .success(let users) = await accountRepository.getAllFiloKretoTeam() {
+            return Array(Set(users.filter { !$0.email.isEmpty }.map { $0.email }))
+        }
+        return []
     }
 
     private func extractMentionedEmails(_ text: String) -> [String] {

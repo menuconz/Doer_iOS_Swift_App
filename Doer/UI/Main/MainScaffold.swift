@@ -80,6 +80,8 @@ struct DrawerContent: View {
         }
 
         if prefs.isAdmin || prefs.isManager {
+            items.append(DrawerMenuItem(title: "Live Tracking", icon: "location.fill", route: .liveTracking, requiresManager: true))
+            items.append(DrawerMenuItem(title: "Time Tracking", icon: "clock", route: .timeTracking, requiresManager: true))
             items.append(DrawerMenuItem(title: "Contractors", icon: "person.3", route: .allContractors, requiresManager: true))
         }
 

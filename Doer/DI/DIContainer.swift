@@ -17,6 +17,8 @@ class DIContainer {
     lazy var restHomeApi = RestHomeApi()
     lazy var caregiverLevelApi = CaregiverLevelApi()
     lazy var locationTrackingApi = LocationTrackingApi()
+    lazy var trackingApi = TrackingApi()
+    lazy var timeTrackingApi = TimeTrackingApi()
     lazy var logsApi = LogsApi()
 
     // MARK: - Repositories
@@ -29,6 +31,8 @@ class DIContainer {
     lazy var restHomeRepository = RestHomeRepository(restHomeApi: restHomeApi)
     lazy var caregiverLevelRepository = CaregiverLevelRepository(caregiverLevelApi: caregiverLevelApi)
     lazy var locationTrackingRepository = LocationTrackingRepository(locationApi: locationTrackingApi, prefs: preferencesManager)
+    lazy var trackingRepository = TrackingRepository(trackingApi: trackingApi, prefs: preferencesManager)
+    lazy var timeTrackingRepository = TimeTrackingRepository(timeTrackingApi: timeTrackingApi, prefs: preferencesManager)
     lazy var logsRepository = LogsRepository(logsApi: logsApi, prefs: preferencesManager)
 
     // MARK: - Services

@@ -274,7 +274,13 @@ class AddShiftViewModel {
             shift.invoiceStatus = 1
             shift.isAllDay = isAllDay
             shift.isReminderScheduled = isReminderScheduled
-            shift.reminderOffset = isReminderScheduled ? "00:\(reminder!.offsetMinutes):00" : nil
+            if isReminderScheduled {
+                // Convert total minutes → HH:mm:ss (minutes/seconds must stay 0-59 for C# TimeSpan.Parse)
+                let totalMin = reminder!.offsetMinutes
+                shift.reminderOffset = String(format: "%02d:%02d:00", totalMin / 60, totalMin % 60)
+            } else {
+                shift.reminderOffset = nil
+            }
             shift.clientId = clientId
             shift.createdBy = userId
             shift.createdDate = now

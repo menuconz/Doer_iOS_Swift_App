@@ -59,6 +59,7 @@ struct AddNewClientScreen: View {
             }
             .padding(20)
         }
+        .scrollDismissesKeyboard(.interactively)
         .background(bgColor)
         .navigationTitle("New Client")
         .navigationBarTitleDisplayMode(.inline)

@@ -60,4 +60,9 @@ enum Route: Hashable {
     // Admin
     case mainLeadsJobs
     case filoKretoTeam
+
+    // Tracking
+    case liveTracking
+    case timeTracking
+    case navigationMap(siteLatitude: Double, siteLongitude: Double, siteAddress: String, projectName: String, shiftId: Int)
 }

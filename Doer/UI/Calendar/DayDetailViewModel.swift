@@ -942,7 +942,7 @@ class DayDetailViewModel {
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
         let cleaned = String(dateStr.prefix(19))
         guard let date = formatter.date(from: cleaned) else { return dateStr }
-        formatter.dateFormat = "dd MMM yyyy, h:mm a"
+        formatter.dateFormat = "dd/MM/yyyy hh:mm a"
         formatter.locale = Locale(identifier: "en_US")
         return formatter.string(from: date)
     }

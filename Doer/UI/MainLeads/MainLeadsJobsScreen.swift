@@ -154,6 +154,9 @@ struct MainLeadsJobsScreen: View {
         .onAppear {
             viewModel.refreshData()
         }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+            viewModel.refreshData()
+        }
     }
 
     // MARK: - Month Navigation

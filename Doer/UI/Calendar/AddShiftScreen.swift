@@ -227,6 +227,7 @@ struct AddShiftScreen: View {
                 }
                 .padding(.horizontal, 16)
             }
+            .scrollDismissesKeyboard(.interactively)
 
             // Toast message
             if let message = toastMessage {

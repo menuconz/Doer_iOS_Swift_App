@@ -1,6 +1,8 @@
 import SwiftUI
 import FirebaseCore
 import FirebaseCrashlytics
+import GoogleMaps
+import GoogleNavigation
 
 @main
 struct DoerApp: App {
@@ -32,6 +34,7 @@ struct DoerApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .preferredColorScheme(.light)
         }
     }
 }
@@ -42,6 +45,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
+        // Initialize Google Maps & Navigation SDK
+        GMSServices.provideAPIKey("AIzaSyDCmj86d3XA-GvAonJowP1ujnzCf7TDKAE")
+
         // Initialize Firebase
         FirebaseApp.configure()
 

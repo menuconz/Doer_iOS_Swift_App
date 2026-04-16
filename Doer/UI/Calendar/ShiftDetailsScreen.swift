@@ -1,10 +1,16 @@
 import SwiftUI
+import UIKit
+import CoreLocation
+import GoogleNavigation
 
 struct ShiftDetailsScreen: View {
     @Binding var path: NavigationPath
     @State private var viewModel: ShiftDetailsViewModel
     @State private var showDeleteDialog = false
     @State private var toastMessage: String? = nil
+    // Skip refresh on the first appearance (init already loaded). Refresh on
+    // subsequent appearances — i.e., when returning from feedback/reviews/edit.
+    @State private var hasInitiallyAppeared = false
 
     init(path: Binding<NavigationPath>, shiftId: Int) {
         self._path = path
@@ -33,9 +39,95 @@ struct ShiftDetailsScreen: View {
             } else {
                 let shift = viewModel.shift!
 
+                VStack(spacing: 0) {
                 ScrollView {
-                    VStack(spacing: 20) {
-                        // Manager Selection (Admin only)
+                    VStack(spacing: 12) {
+                        // SECTION 1: Project + Status + Location (combined)
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text(shift.projectName.isEmpty ? "Not Set" : shift.projectName)
+                                    .font(.system(size: 18)).fontWeight(.bold).foregroundColor(Color(hex: "1F2937"))
+                                Spacer()
+                                Text(viewModel.statusMessage)
+                                    .font(.system(size: 12)).fontWeight(.bold).foregroundColor(.white)
+                                    .padding(.horizontal, 10).padding(.vertical, 4)
+                                    .background(viewModel.statusColor).cornerRadius(20)
+                            }
+                            if let clientName = shift.clientName, !clientName.isEmpty {
+                                HStack(spacing: 6) {
+                                    Text("\u{1F464}").font(.system(size: 14))
+                                    Text(clientName).font(.system(size: 14)).foregroundColor(Color(hex: "6B7280"))
+                                }
+                            }
+                            HStack(spacing: 6) {
+                                Text("\u{1F4CD}").font(.system(size: 14))
+                                Text(shift.address.isEmpty ? "Not Set" : shift.address).font(.system(size: 14)).foregroundColor(Color(hex: "6B7280"))
+                            }
+                        }
+                        .padding(16)
+                        .background(Color.white).cornerRadius(15)
+                        .shadow(color: .black.opacity(0.08), radius: 2, y: 1)
+
+                        // SECTION 2: Tracking + Navigate + Clock In/Out
+                        if viewModel.isTrackingActive && viewModel.isCaregiver {
+                            TrackingStatusCard(trackingState: viewModel.trackingState)
+                        }
+
+                        if viewModel.showNavigateButton {
+                            Button {
+                                // Accept T&C before opening navigation (must happen before fullScreenCover)
+                                GMSNavigationServices.showTermsAndConditionsDialogIfNeeded(
+                                    withCompanyName: "Doer"
+                                ) { accepted in
+                                    if accepted {
+                                        viewModel.showNavigation = true
+                                    }
+                                }
+                            } label: {
+                                HStack {
+                                    Image(systemName: "location.fill").font(.system(size: 16))
+                                    Text("Navigate to Site").fontWeight(.bold).font(.system(size: 16))
+                                }
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity).frame(height: 50)
+                                .background(Color(hex: "007AFF")).cornerRadius(12)
+                            }
+                            .fullScreenCover(isPresented: Binding(
+                                get: { viewModel.showNavigation },
+                                set: { viewModel.showNavigation = $0 }
+                            )) {
+                                TurnByTurnNavigationView(
+                                    destinationLatitude: shift.latitude ?? 0,
+                                    destinationLongitude: shift.longitude ?? 0,
+                                    projectName: shift.projectName.isEmpty ? "Site #\(shift.id)" : shift.projectName,
+                                    onDismiss: { viewModel.showNavigation = false }
+                                )
+                                .ignoresSafeArea()
+                            }
+                        }
+
+                        if viewModel.showMultiSiteWarning {
+                            VStack(spacing: 12) {
+                                Text("You are currently clocked in at \(viewModel.activeShiftProjectName). Clock out first before clocking in here.")
+                                    .font(.system(size: 14)).foregroundColor(Color(hex: "856404"))
+                                Button {
+                                    viewModel.clockOutOtherShift()
+                                } label: {
+                                    Text("Clock Out from \(viewModel.activeShiftProjectName)")
+                                        .fontWeight(.bold).foregroundColor(.white)
+                                        .frame(maxWidth: .infinity).frame(height: 44)
+                                        .background(Color.red).cornerRadius(10)
+                                }
+                            }
+                            .padding(16)
+                            .background(Color(hex: "FFF3CD")).cornerRadius(15)
+                        }
+
+                        if viewModel.showClockInButton || viewModel.showClockOutButton {
+                            ClockInOutSection(viewModel: viewModel)
+                        }
+
+                        // SECTION 3: People Info
                         if viewModel.isAdmin {
                             ManagerPickerSection(
                                 managersList: viewModel.managersList,
@@ -46,102 +138,24 @@ struct ShiftDetailsScreen: View {
                                 }
                             )
                         }
-
-                        // Manager Information Card (Admin only)
                         if viewModel.isAdmin && !viewModel.managerName.isEmpty {
-                            InfoCard(
-                                icon: "\u{1F464}",
-                                title: "Manager Information",
-                                rows: [
-                                    ("\u{1F464}", "Manager Name:", viewModel.managerName),
-                                    ("\u{1F4E7}", "Manager Email:", viewModel.managerEmail),
-                                    ("\u{1F4F1}", "Manager Phone:", viewModel.managerPhone)
-                                ]
-                            )
+                            InfoCard(icon: "\u{1F464}", title: "Manager Information", rows: [
+                                ("\u{1F464}", "Manager Name:", viewModel.managerName),
+                                ("\u{1F4E7}", "Manager Email:", viewModel.managerEmail),
+                                ("\u{1F4F1}", "Manager Phone:", viewModel.managerPhone)
+                            ])
                         }
-
-                        // Contractor Information Card
                         if viewModel.isManager && !viewModel.contractorName.isEmpty {
-                            InfoCard(
-                                icon: "\u{1F464}",
-                                title: "Contractor Information",
-                                rows: [
-                                    ("\u{1F464}", "Name:", viewModel.contractorName),
-                                    ("\u{1F4E7}", "Email:", viewModel.contractorEmail),
-                                    ("\u{1F4F1}", "Phone:", viewModel.contractorPhone)
-                                ]
-                            )
+                            InfoCard(icon: "\u{1F464}", title: "Contractor Information", rows: [
+                                ("\u{1F464}", "Name:", viewModel.contractorName),
+                                ("\u{1F4E7}", "Email:", viewModel.contractorEmail),
+                                ("\u{1F4F1}", "Phone:", viewModel.contractorPhone)
+                            ])
                         }
 
-                        // Project Name
-                        DetailCard(icon: "\u{1F4CB}", title: "Project Name") {
-                            Text(shift.projectName.isEmpty ? "Not Set" : shift.projectName)
-                                .font(.system(size: 16))
-                                .foregroundColor(Color(hex: "6B7280"))
-                                .padding(.leading, 26)
-                        }
-
-                        // Client Name
-                        DetailCard(icon: "\u{1F464}", title: "Client Name") {
-                            Text(shift.clientName ?? "")
-                                .font(.system(size: 16))
-                                .foregroundColor(Color(hex: "6B7280"))
-                                .padding(.leading, 26)
-                        }
-
-                        // All Day toggle (Manager/Admin only)
-                        if viewModel.isAllDayEditable {
-                            VStack {
-                                HStack {
-                                    Text("All Day")
-                                        .font(.system(size: 16))
-                                        .fontWeight(.bold)
-                                        .foregroundColor(Color(hex: "007AFF"))
-                                    Spacer()
-                                    Toggle("", isOn: Binding(
-                                        get: { viewModel.isAllDay },
-                                        set: { newValue in
-                                            viewModel.updateIsAllDay(newValue)
-                                            viewModel.updateShift()
-                                        }
-                                    ))
-                                    .labelsHidden()
-                                }
-                                .padding(.horizontal, 15)
-                                .padding(.vertical, 10)
-                            }
-                            .background(Color.white)
-                            .cornerRadius(12)
-                            .shadow(color: Color.black.opacity(0.08), radius: 2, y: 1)
-                        }
-
-                        // Reminder Section
-                        if viewModel.showReminderSection {
-                            ReminderCard(
-                                canEdit: viewModel.canEditReminder,
-                                canViewOnly: viewModel.canViewReminderOnly,
-                                hasReminderSet: viewModel.hasReminderSet,
-                                reminderOptions: viewModel.reminderOptions,
-                                selectedLabel: viewModel.selectedReminderLabel,
-                                reminderTime: viewModel.shift?.reminderTime,
-                                onSelectReminder: { label in
-                                    viewModel.selectReminder(label)
-                                    viewModel.addReminder()
-                                }
-                            )
-                        }
-
-                        // Job Location
-                        DetailCard(icon: "\u{1F4CD}", title: "Job Location") {
-                            Text(shift.address.isEmpty ? "Not Set" : shift.address)
-                                .font(.system(size: 16))
-                                .foregroundColor(Color(hex: "6B7280"))
-                                .padding(.leading, 26)
-                        }
-
-                        // Job Schedule
+                        // SECTION 4: Schedule
                         DetailCard(icon: "\u{23F0}", title: "Job Schedule") {
-                            VStack(spacing: 10) {
+                            VStack(spacing: 8) {
                                 ScheduleRow(label: "\u{1F550} Duration From:", value: viewModel.durationFromFormatted)
                                 ScheduleRow(label: "\u{1F555} Duration To:", value: viewModel.durationToFormatted)
                                 if viewModel.showShiftStartTime && !viewModel.shiftStartTimeFormatted.isEmpty {
@@ -154,81 +168,60 @@ struct ShiftDetailsScreen: View {
                         }
 
                         // Job Description
-                        DetailCard(icon: "\u{1F4DD}", title: "Job Description") {
-                            Text(shift.instructions.isEmpty ? "No description" : shift.instructions)
-                                .font(.system(size: 16))
-                                .foregroundColor(Color(hex: "6B7280"))
-                                .padding(.leading, 26)
+                        if !shift.instructions.isEmpty {
+                            DetailCard(icon: "\u{1F4DD}", title: "Job Description") {
+                                Text(shift.instructions).font(.system(size: 14)).foregroundColor(Color(hex: "6B7280")).padding(.leading, 26)
+                            }
                         }
 
-                        // Contract Type
-                        DetailCard(icon: "\u{1F4C4}", title: "Contract Type") {
-                            Text(viewModel.contractTypeText)
-                                .font(.system(size: 16))
-                                .foregroundColor(Color(hex: "6B7280"))
-                                .padding(.leading, 26)
-                        }
-
-                        // Invoice Status
-                        DetailCard(icon: "\u{1F9FE}", title: "Invoice Status") {
-                            Text(viewModel.invoiceStatusText)
-                                .font(.system(size: 16))
-                                .foregroundColor(Color(hex: "6B7280"))
-                                .padding(.leading, 26)
-                        }
-
-                        // H&S Forms Required
-                        DetailCard(icon: "\u{1F6E1}\u{FE0F}", title: "H&S Forms Required") {
+                        // SECTION 5: Job Details (combined)
+                        VStack(alignment: .leading, spacing: 10) {
+                            HStack(spacing: 8) {
+                                Text("\u{1F4C4}").font(.system(size: 18))
+                                Text("Job Details").font(.system(size: 18)).fontWeight(.bold).foregroundColor(Color(hex: "007AFF"))
+                            }
+                            HStack { Text("Contract Type").font(.system(size: 14)).fontWeight(.bold).foregroundColor(Color(hex: "6B7280")); Spacer(); Text(viewModel.contractTypeText).font(.system(size: 14)) }
+                            HStack { Text("Invoice Status").font(.system(size: 14)).fontWeight(.bold).foregroundColor(Color(hex: "6B7280")); Spacer(); Text(viewModel.invoiceStatusText).font(.system(size: 14)) }
                             if viewModel.showHsForm {
-                                Text(viewModel.hsFormText)
-                                    .font(.system(size: 14))
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 15)
-                                    .padding(.vertical, 8)
-                                    .background(viewModel.hsFormColor)
-                                    .cornerRadius(12)
-                                    .padding(.leading, 26)
-                                    .padding(.top, 8)
+                                HStack {
+                                    Text("H&S Forms").font(.system(size: 14)).fontWeight(.bold).foregroundColor(Color(hex: "6B7280"))
+                                    Spacer()
+                                    Text(viewModel.hsFormText).font(.system(size: 12)).fontWeight(.bold).foregroundColor(.white)
+                                        .padding(.horizontal, 10).padding(.vertical, 4).background(viewModel.hsFormColor).cornerRadius(8)
+                                }
+                            }
+                            if viewModel.isAllDayEditable {
+                                HStack {
+                                    Text("All Day").font(.system(size: 14)).fontWeight(.bold).foregroundColor(Color(hex: "6B7280"))
+                                    Spacer()
+                                    Toggle("", isOn: Binding(get: { viewModel.isAllDay }, set: { viewModel.updateIsAllDay($0); viewModel.updateShift() })).labelsHidden()
+                                }
                             }
                         }
+                        .padding(16).background(Color.white).cornerRadius(15)
+                        .shadow(color: .black.opacity(0.08), radius: 2, y: 1)
 
-                        // Feedback Section
-                        if viewModel.showFeedback {
-                            FeedbackCard(shift: shift)
+                        // Reminder
+                        if viewModel.showReminderSection {
+                            ReminderCard(canEdit: viewModel.canEditReminder, canViewOnly: viewModel.canViewReminderOnly, hasReminderSet: viewModel.hasReminderSet, reminderOptions: viewModel.reminderOptions, selectedLabel: viewModel.selectedReminderLabel, reminderTime: viewModel.shift?.reminderTime, onSelectReminder: { label in viewModel.selectReminder(label); viewModel.addReminder() })
                         }
 
-                        // Job Status
-                        DetailCard(icon: "\u{1F4CA}", title: "Job Status") {
-                            Text(viewModel.statusMessage)
-                                .font(.system(size: 14))
-                                .fontWeight(.bold)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
-                                .background(viewModel.statusColor)
-                                .cornerRadius(20)
-                        }
+                        // Feedback
+                        if viewModel.showFeedback { FeedbackCard(shift: shift) }
 
-                        // Action Buttons Section
-                        ActionButtonsSection(
-                            viewModel: viewModel,
-                            onSendQuote: {
-                                path.append(Route.sendQuote(shiftId: shift.id))
-                            },
-                            onViewQuotations: {
-                                path.append(Route.viewQuotations(shiftId: shift.id))
-                            },
-                            onSendFeedback: { shiftId in
-                                path.append(Route.sendFeedback(shiftId: shiftId))
-                            }
-                        )
-
-                        Spacer().frame(height: 30)
+                        Spacer().frame(height: 16)
                     }
                     .padding(.horizontal, 20)
-                    .padding(.top, 30)
+                    .padding(.top, 15)
                 }
+
+                // Sticky Bottom Buttons
+                ActionButtonsSection(viewModel: viewModel,
+                    onSendQuote: { path.append(Route.sendQuote(shiftId: shift.id)) },
+                    onViewQuotations: { path.append(Route.viewQuotations(shiftId: shift.id)) },
+                    onSendFeedback: { shiftId in path.append(Route.sendFeedback(shiftId: shiftId)) }
+                )
+                } // End VStack
             }
 
             // Toast message
@@ -270,6 +263,13 @@ struct ShiftDetailsScreen: View {
         } message: {
             Text("Do you really want to delete this job?")
         }
+        .onAppear {
+            if hasInitiallyAppeared {
+                viewModel.refresh()
+            } else {
+                hasInitiallyAppeared = true
+            }
+        }
         .onChange(of: viewModel.isDeleted) { _, newValue in
             if newValue { path.removeLast() }
         }
@@ -295,7 +295,7 @@ struct ShiftDetailsScreen: View {
             if let msg = newValue {
                 showToast(msg)
                 viewModel.clearSuccessMessage()
-                if msg == "Shift started" || msg == "Shift ended" || msg == "Shift marked as not completed" || msg == "Shift updated" {
+                if msg == "Shift marked as not completed" || msg == "Shift updated" {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                         path.removeLast()
                     }
@@ -630,41 +630,33 @@ private struct ActionButtonsSection: View {
     let onViewQuotations: () -> Void
     let onSendFeedback: (Int) -> Void
 
+    var hasAnyButton: Bool {
+        viewModel.quotationButton || viewModel.viewQuotationsButton ||
+        viewModel.completeButton || viewModel.markCompleteButton ||
+        viewModel.rejectButton || viewModel.reviewsButton || viewModel.isUpdating
+    }
+
     var body: some View {
-        if viewModel.isUpdating {
-            HStack {
-                Spacer()
-                ProgressView()
-                Spacer()
-            }
-            .padding(20)
+        if !hasAnyButton { EmptyView() }
+        else if viewModel.isUpdating {
+            HStack { Spacer(); ProgressView(); Spacer() }
+                .padding(12).background(Color.white)
         } else {
-            VStack(spacing: 15) {
-                // Send Quote Button (Caregiver)
-                if viewModel.quotationButton {
-                    ActionButton(text: "Send Quote", bgColor: .black, action: onSendQuote)
-                }
-
-                // View Quotations Button (Manager/Admin)
-                if viewModel.viewQuotationsButton {
-                    ActionButton(text: "View Quotations", bgColor: .black, action: onViewQuotations)
-                }
-
-                // Main Action Buttons Row
+            VStack(spacing: 0) {
+                Divider()
                 HStack(spacing: 10) {
-                    if viewModel.startButton {
-                        ActionButton(text: "Start", bgColor: .black, action: viewModel.startShift)
+                    if viewModel.quotationButton {
+                        ActionButton(text: "Send Quote", bgColor: .black, action: onSendQuote)
                     }
-                    if viewModel.endButton {
-                        ActionButton(text: "End", bgColor: .black, action: viewModel.endShift)
+                    if viewModel.viewQuotationsButton {
+                        ActionButton(text: "View Quotations", bgColor: .black, action: onViewQuotations)
                     }
                     if viewModel.completeButton {
                         ActionButton(text: "Complete", bgColor: .black, action: viewModel.completeShift)
                     }
-                }
-
-                // Secondary Action Buttons Row
-                HStack(spacing: 10) {
+                    if viewModel.markCompleteButton {
+                        ActionButton(text: "Mark Complete", bgColor: Color(hex: "007AFF"), action: viewModel.markShiftComplete)
+                    }
                     if viewModel.rejectButton {
                         ActionButton(text: "Reject", bgColor: Color(hex: "8B0000"), action: viewModel.rejectShift)
                     }
@@ -672,7 +664,242 @@ private struct ActionButtonsSection: View {
                         ActionButton(text: "Reviews", bgColor: .black, action: viewModel.viewReviews)
                     }
                 }
+                .padding(.horizontal, 20).padding(.vertical, 12)
             }
+            .background(Color.white)
+        }
+    }
+}
+
+// MARK: - Tracking Status Card
+
+private struct TrackingStatusCard: View {
+    let trackingState: DoerTrackingState
+
+    var statusColor: Color {
+        switch trackingState {
+        case .idle: return .gray
+        case .clockedIn: return Color(hex: "007AFF")
+        case .enRoute: return Color(hex: "3B82F6")
+        case .arrived: return Color(hex: "10B981")
+        case .onSite: return Color(hex: "00C875")
+        case .leaving: return Color(hex: "F59E0B")
+        case .clockedOut: return .gray
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 8) {
+                Text("\u{1F4E1}").font(.system(size: 18))
+                Text("Live Tracking").font(.system(size: 18)).fontWeight(.bold).foregroundColor(Color(hex: "007AFF"))
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            HStack {
+                Text("Status:").font(.system(size: 14)).fontWeight(.bold).foregroundColor(Color(hex: "6B7280"))
+                Spacer()
+                Text(trackingState.label)
+                    .font(.system(size: 14)).fontWeight(.bold).foregroundColor(.white)
+                    .padding(.horizontal, 14).padding(.vertical, 6)
+                    .background(statusColor).cornerRadius(20)
+            }
+
+            if trackingState == .leaving {
+                Text("Auto clock-out in 5 minutes if you don't return to site")
+                    .font(.system(size: 12)).foregroundColor(Color(hex: "F59E0B"))
+            }
+        }
+        .padding(16).background(Color.white).cornerRadius(15)
+        .shadow(color: .black.opacity(0.08), radius: 2, y: 1)
+    }
+}
+
+// MARK: - Clock In/Out Section
+
+private struct ClockInOutSection: View {
+    let viewModel: ShiftDetailsViewModel
+    @State private var showClockOutDialog = false
+    @State private var clockOutReason = ""
+    @State private var showForegroundLocationDisclosure = false
+    @State private var showBackgroundLocationDisclosure = false
+    @State private var hasBackgroundLocation = (CLLocationManager().authorizationStatus == .authorizedAlways)
+    @State private var pendingBackgroundPrompt = false
+
+    private let locationManager = CLLocationManager()
+
+    private func performClockIn() {
+        if let loc = locationManager.location {
+            viewModel.clockInWithTracking(latitude: loc.coordinate.latitude, longitude: loc.coordinate.longitude)
+        } else {
+            viewModel.clockInWithTracking(latitude: 0, longitude: 0)
+        }
+    }
+
+    private func refreshPermissionState() {
+        hasBackgroundLocation = CLLocationManager().authorizationStatus == .authorizedAlways
+    }
+
+    private func handleClockInTapped() {
+        let status = CLLocationManager().authorizationStatus
+        switch status {
+        case .notDetermined:
+            // First time — show disclosure before system prompt
+            showForegroundLocationDisclosure = true
+        case .authorizedWhenInUse:
+            // Have foreground — show background disclosure before upgrading
+            showBackgroundLocationDisclosure = true
+        case .authorizedAlways:
+            performClockIn()
+        case .denied, .restricted:
+            // User denied — still allow clock in, but tracking will be limited
+            performClockIn()
+        @unknown default:
+            performClockIn()
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                Text("\u{23F1}\u{FE0F}").font(.system(size: 18))
+                Text("Clock In / Out").font(.system(size: 18)).fontWeight(.bold).foregroundColor(Color(hex: "007AFF"))
+            }
+
+            if viewModel.showClockInButton {
+                Text("Where are you clocking in?").font(.system(size: 14)).fontWeight(.bold).foregroundColor(Color(hex: "6B7280"))
+
+                // Location type chips
+                HStack(spacing: 8) {
+                    ForEach([ClockLocationType.site, .yard, .office], id: \.rawValue) { type in
+                        let label = type == .site ? "Site" : type == .yard ? "Yard" : "Office"
+                        let isSelected = viewModel.selectedClockLocationType == type
+                        Button { viewModel.selectedClockLocationType = type } label: {
+                            Text(label).font(.system(size: 14)).fontWeight(.bold)
+                                .foregroundColor(isSelected ? .white : Color(hex: "007AFF"))
+                                .padding(.horizontal, 16).padding(.vertical, 8)
+                                .background(isSelected ? Color(hex: "007AFF") : Color(hex: "007AFF").opacity(0.1))
+                                .cornerRadius(20)
+                        }
+                    }
+                }
+
+                // Stage picker
+                if !viewModel.availableStages.isEmpty {
+                    Text("Select Stage:").font(.system(size: 14)).fontWeight(.bold).foregroundColor(Color(hex: "6B7280"))
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(viewModel.availableStages, id: \.id) { stage in
+                                let isSelected = viewModel.selectedStageName == stage.subitem
+                                Button { viewModel.selectedStageName = stage.subitem } label: {
+                                    Text(stage.subitem).font(.system(size: 12)).fontWeight(.bold)
+                                        .foregroundColor(isSelected ? .white : Color(hex: "8B5CF6"))
+                                        .padding(.horizontal, 12).padding(.vertical, 8)
+                                        .background(isSelected ? Color(hex: "8B5CF6") : Color(hex: "8B5CF6").opacity(0.1))
+                                        .cornerRadius(20)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Background location warning banner
+                if !hasBackgroundLocation {
+                    Button { showBackgroundLocationDisclosure = true } label: {
+                        HStack(spacing: 10) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(Color(hex: "B25E02"))
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Background location is off")
+                                    .font(.system(size: 14)).fontWeight(.bold)
+                                    .foregroundColor(Color(hex: "663900"))
+                                Text("Doer can't track your shift when the phone is locked or you're in another app. Tap to enable \"Always\".")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(Color(hex: "663900"))
+                                    .multilineTextAlignment(.leading)
+                            }
+                            Spacer()
+                        }
+                        .padding(12)
+                        .background(Color(hex: "FFF4E5"))
+                        .cornerRadius(12)
+                    }
+                }
+
+                // Clock In button
+                Button {
+                    handleClockInTapped()
+                } label: {
+                    Text("Clock In").fontWeight(.bold).font(.system(size: 16)).foregroundColor(.white)
+                        .frame(maxWidth: .infinity).frame(height: 50)
+                        .background(Color(hex: "00C875")).cornerRadius(12)
+                }
+            }
+
+            if viewModel.showClockOutButton {
+                Button { showClockOutDialog = true } label: {
+                    Text("Clock Out").fontWeight(.bold).font(.system(size: 16)).foregroundColor(.white)
+                        .frame(maxWidth: .infinity).frame(height: 50)
+                        .background(Color.red).cornerRadius(12)
+                }
+                .alert("Clock Out", isPresented: $showClockOutDialog) {
+                    TextField("Reason (optional)", text: $clockOutReason)
+                    Button("Clock Out", role: .destructive) {
+                        let lm = CLLocationManager()
+                        viewModel.clockOutWithTracking(
+                            latitude: lm.location?.coordinate.latitude ?? 0,
+                            longitude: lm.location?.coordinate.longitude ?? 0,
+                            reasonCode: clockOutReason.isEmpty ? nil : clockOutReason
+                        )
+                    }
+                    Button("Cancel", role: .cancel) {}
+                } message: {
+                    Text("Are you sure you want to clock out?")
+                }
+            }
+        }
+        .padding(16).background(Color.white).cornerRadius(15)
+        .shadow(color: .black.opacity(0.08), radius: 2, y: 1)
+        .onAppear { refreshPermissionState() }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+            refreshPermissionState()
+            if pendingBackgroundPrompt {
+                pendingBackgroundPrompt = false
+                let status = CLLocationManager().authorizationStatus
+                switch status {
+                case .authorizedWhenInUse:
+                    showBackgroundLocationDisclosure = true
+                case .authorizedAlways:
+                    performClockIn()
+                default:
+                    performClockIn()
+                }
+            }
+        }
+        .alert("Location access required", isPresented: $showForegroundLocationDisclosure) {
+            Button("Continue") {
+                // Request When-In-Use; when iOS dialog closes, didBecomeActive fires
+                // and we show the Always-upgrade dialog.
+                pendingBackgroundPrompt = true
+                locationManager.requestWhenInUseAuthorization()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Doer collects location data to track your shift, record the route to the job site, enable turn-by-turn navigation, and automatically clock you in and out via geofences at customer sites.\n\nLocation is used only while you are clocked in. A persistent indicator will show while tracking, and tracking stops as soon as you clock out.")
+        }
+        .alert("Allow background location", isPresented: $showBackgroundLocationDisclosure) {
+            Button("Continue") {
+                locationManager.requestAlwaysAuthorization()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    refreshPermissionState()
+                    performClockIn()
+                }
+            }
+            Button("Not now", role: .cancel) {
+                performClockIn()
+            }
+        } message: {
+            Text("To keep tracking your shift accurately when the phone is locked or you are using another app, Doer needs permission to access location in the background.\n\nOn the next screen, please choose \"Change to Always Allow\".\n\nBackground tracking runs only while you are clocked in and stops the moment you clock out.")
         }
     }
 }
@@ -690,7 +917,7 @@ private struct ActionButton: View {
                 .fontWeight(.bold)
                 .font(.system(size: 14))
                 .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 16)
                 .frame(height: 40)
                 .background(bgColor)
                 .cornerRadius(20)

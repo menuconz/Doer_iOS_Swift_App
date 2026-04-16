@@ -316,6 +316,25 @@ struct DoerNavHost: View {
                 onOpenDrawer: { withAnimation { showDrawer = true } }
             )
 
+        case .liveTracking:
+            LiveTrackingView(
+                onOpenDrawer: { withAnimation { showDrawer = true } }
+            )
+
+        case .timeTracking:
+            TimeTrackingDashboardView(
+                onOpenDrawer: { withAnimation { showDrawer = true } }
+            )
+
+        case .navigationMap(let siteLat, let siteLng, let siteAddress, let projectName, let shiftId):
+            NavigationMapScreen(
+                onBack: { path.removeLast() },
+                viewModel: NavigationMapViewModel(
+                    siteLatitude: siteLat, siteLongitude: siteLng,
+                    siteAddress: siteAddress, projectName: projectName, shiftId: shiftId
+                )
+            )
+
         default:
             EmptyView()
         }
@@ -324,6 +343,10 @@ struct DoerNavHost: View {
     // MARK: - Helpers
 
     private func doLogout() {
+        // Auto clock-out if Doer is currently clocked in
+        if TrackingManager.shared.activeShiftId != nil {
+            TrackingManager.shared.clockOut()
+        }
         secureStorage.isLoggedIn = false
         secureStorage.clear()
         prefs.clearSession()

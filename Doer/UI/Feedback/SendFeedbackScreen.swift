@@ -81,6 +81,7 @@ struct SendFeedbackScreen: View {
                     .padding(.top, 40)
                     .padding(.bottom, 50)
                 }
+                .scrollDismissesKeyboard(.interactively)
                 .background(BgColor)
             }
         }

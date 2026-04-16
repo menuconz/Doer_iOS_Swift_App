@@ -152,6 +152,7 @@ struct LoginScreen: View {
             .padding(.horizontal, 24)
             .padding(.vertical, 32)
         }
+        .scrollDismissesKeyboard(.interactively)
         .background(Color(.systemBackground))
         .onChange(of: viewModel.loginSuccess) { _, success in
             if success { onLoginSuccess() }

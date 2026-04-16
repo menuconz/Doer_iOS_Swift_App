@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import Combine
 
 struct ReminderOption: Identifiable {
     let id = UUID()
@@ -83,6 +84,20 @@ class ShiftDetailsViewModel {
     var navigateToFeedbackShiftId: Int? = nil
     var navigateToReviewsShiftId: Int? = nil
 
+    // Tracking
+    var showNavigateButton: Bool = false
+    var showClockInButton: Bool = false
+    var showClockOutButton: Bool = false
+    var isTrackingActive: Bool = false
+    var trackingState: DoerTrackingState = .idle
+    var selectedClockLocationType: ClockLocationType = .site
+    var availableStages: [ShiftSubItemDto] = []
+    var selectedStageName: String = ""
+    var showMultiSiteWarning: Bool = false
+    var activeShiftProjectName: String = ""
+    var markCompleteButton: Bool = false
+    var showNavigation: Bool = false
+
     // Private
     private let shiftRepository: ShiftRepository
     private let accountRepository: AccountRepository
@@ -90,6 +105,7 @@ class ShiftDetailsViewModel {
     private let preferencesManager: PreferencesManager
     private let shiftId: Int
     private var hasLoaded = false
+    private var trackingCancellable: AnyCancellable?
 
     private let displayDateFormat: DateFormatter = {
         let f = DateFormatter()
@@ -144,7 +160,25 @@ class ShiftDetailsViewModel {
     func loadInitialData() {
         guard !hasLoaded else { return }
         hasLoaded = true
+        observeTrackingState()
         loadShiftDetails()
+    }
+
+    private func observeTrackingState() {
+        let tm = TrackingManager.shared
+        trackingCancellable = tm.$trackingState
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] newState in
+                guard let self, let shift = self.shift else { return }
+                self.trackingState = newState
+                self.isTrackingActive = newState != .idle && newState != .clockedOut
+                self.showClockInButton = self.isCaregiver
+                    && (shift.statusId == 2 || shift.statusId == 3)
+                    && tm.trackingState == .idle
+                self.showClockOutButton = self.isCaregiver
+                    && tm.activeShiftId == shift.id
+                    && newState != .idle && newState != .clockedOut
+            }
     }
 
     func refresh() { loadShiftDetails() }
@@ -247,6 +281,40 @@ class ShiftDetailsViewModel {
                 selectedManagerId = shiftData.userId?.isEmpty == true ? nil : shiftData.userId
                 originalManagerId = shiftData.userId ?? ""
 
+                // Tracking button visibility
+                let tm = TrackingManager.shared
+                showNavigateButton = prefIsCaregiver && statusId >= 2 && statusId <= 3
+                    && shiftData.latitude != nil && shiftData.longitude != nil
+                showClockInButton = prefIsCaregiver && (statusId == 2 || statusId == 3)
+                    && tm.trackingState == .idle
+                showClockOutButton = prefIsCaregiver
+                    && tm.activeShiftId == shiftData.id
+                    && tm.trackingState != .idle && tm.trackingState != .clockedOut
+                isTrackingActive = tm.trackingState != .idle && tm.trackingState != .clockedOut
+                trackingState = tm.trackingState
+                markCompleteButton = prefIsCaregiver && statusId == 3 && tm.trackingState == .idle
+                reviewsButton = prefIsCaregiver && statusId == 6 && shiftData.contractorResponseToReview.isEmpty
+
+                // Multi-site check
+                if let activeId = tm.activeShiftId, activeId != shiftData.id,
+                   tm.trackingState != .idle, tm.trackingState != .clockedOut {
+                    showMultiSiteWarning = true
+                    showClockInButton = false
+                    activeShiftProjectName = "Shift #\(activeId)"
+                }
+
+                // Load stages for clock-in
+                if prefIsCaregiver && (statusId == 2 || statusId == 3) {
+                    var stages = shiftData.shiftSubItems ?? []
+                    if stages.isEmpty {
+                        if case .success(let items) = await shiftRepository.getSubItemsByJobId(id: shiftData.id) {
+                            stages = items
+                        }
+                    }
+                    availableStages = stages
+                    selectedStageName = stages.first?.subitem ?? ""
+                }
+
                 if isManagerSection && !shiftData.caregiverId.isEmpty {
                     await loadContractorDetails(shiftData.caregiverId)
                 }
@@ -288,6 +356,61 @@ class ShiftDetailsViewModel {
         }
     }
 
+    // MARK: - Tracking Actions
+
+    func clockInWithTracking(latitude: Double, longitude: Double) {
+        guard let shift = shift else { return }
+
+        // Resolve the selected sub-item / stage (nil if shift has no stages)
+        let selectedStage = availableStages.first(where: { $0.subitem == selectedStageName })
+
+        let tm = TrackingManager.shared
+        tm.clockIn(
+            shiftId: shift.id, locationType: selectedClockLocationType,
+            siteLatitude: shift.latitude,
+            siteLongitude: shift.longitude,
+            currentLatitude: latitude, currentLongitude: longitude,
+            projectName: shift.projectName.isEmpty ? "Site #\(shift.id)" : shift.projectName,
+            subItemId: selectedStage?.id,
+            subItemName: selectedStage?.subitem
+        )
+        startShift()
+        loadShiftDetails()
+    }
+
+    func clockOutWithTracking(latitude: Double = 0, longitude: Double = 0, reasonCode: String? = nil) {
+        TrackingManager.shared.clockOut(currentLatitude: latitude, currentLongitude: longitude, reasonCode: reasonCode)
+        loadShiftDetails()
+    }
+
+    func clockOutOtherShift() {
+        TrackingManager.shared.clockOut()
+        showMultiSiteWarning = false
+        showClockInButton = true
+    }
+
+    func markShiftComplete() {
+        guard let currentShift = shift else { return }
+        isUpdating = true; errorMessage = nil
+        Task { @MainActor in
+            let nowNz = Constants.nowNz()
+            var updated = currentShift
+            updated.modifiedBy = preferencesManager.userId
+            updated.modifiedDate = nowNz
+            updated.statusId = 4
+            switch await shiftRepository.updateShift(shiftDetail: updated) {
+            case .success:
+                isUpdating = false
+                successMessage = "Job marked as complete"
+                loadShiftDetails()
+            case .error(let msg, _):
+                isUpdating = false
+                errorMessage = msg
+            case .loading: break
+            }
+        }
+    }
+
     // MARK: - Actions
 
     func startShift() {
@@ -295,10 +418,7 @@ class ShiftDetailsViewModel {
         isUpdating = true; errorMessage = nil
         Task { @MainActor in
             let userId = preferencesManager.userId
-            let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
-            formatter.timeZone = TimeZone(identifier: "UTC")
-            let nowUtc = formatter.string(from: Date())
+            let nowUtc = Constants.nowNz()
             var updated = currentShift
             updated.modifiedBy = userId
             updated.modifiedDate = nowUtc
@@ -308,6 +428,7 @@ class ShiftDetailsViewModel {
             case .success:
                 isUpdating = false
                 successMessage = "Shift started"
+                loadShiftDetails()
             case .error(let msg, _):
                 isUpdating = false
                 errorMessage = msg
@@ -321,10 +442,7 @@ class ShiftDetailsViewModel {
         isUpdating = true; errorMessage = nil
         Task { @MainActor in
             let userId = preferencesManager.userId
-            let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
-            formatter.timeZone = TimeZone(identifier: "UTC")
-            let nowUtc = formatter.string(from: Date())
+            let nowUtc = Constants.nowNz()
             var updated = currentShift
             updated.modifiedBy = userId
             updated.modifiedDate = nowUtc
@@ -334,6 +452,7 @@ class ShiftDetailsViewModel {
             case .success:
                 isUpdating = false
                 successMessage = "Shift ended"
+                loadShiftDetails()
             case .error(let msg, _):
                 isUpdating = false
                 errorMessage = msg
@@ -347,10 +466,7 @@ class ShiftDetailsViewModel {
         isUpdating = true; errorMessage = nil
         Task { @MainActor in
             let userId = preferencesManager.userId
-            let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
-            formatter.timeZone = TimeZone(identifier: "UTC")
-            let nowUtc = formatter.string(from: Date())
+            let nowUtc = Constants.nowNz()
             var updated = currentShift
             updated.modifiedBy = userId
             updated.modifiedDate = nowUtc
@@ -359,6 +475,7 @@ class ShiftDetailsViewModel {
             case .success:
                 isUpdating = false
                 successMessage = "Shift marked as not completed"
+                loadShiftDetails()
             case .error(let msg, _):
                 isUpdating = false
                 errorMessage = msg
@@ -421,6 +538,7 @@ class ShiftDetailsViewModel {
             case .success:
                 isUpdating = false
                 successMessage = "Shift updated"
+                loadShiftDetails()
             case .error(let msg, _):
                 isUpdating = false
                 errorMessage = msg

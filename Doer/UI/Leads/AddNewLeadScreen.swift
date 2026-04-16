@@ -154,6 +154,7 @@ struct AddNewLeadScreen: View {
                     }
                     .padding(20)
                 }
+                .scrollDismissesKeyboard(.interactively)
 
                 // Add Lead Button
                 Button(action: { viewModel.addLead() }) {

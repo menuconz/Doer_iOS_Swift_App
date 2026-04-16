@@ -99,6 +99,7 @@ struct GenerateOTPScreen: View {
                 .padding(.horizontal, 24)
                 .padding(.vertical, 16)
             }
+            .scrollDismissesKeyboard(.interactively)
             .background(bgColor)
         }
         .navigationBarHidden(true)

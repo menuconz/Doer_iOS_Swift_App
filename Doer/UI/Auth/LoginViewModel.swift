@@ -122,7 +122,9 @@ class LoginViewModel {
                 case .error(let message, _):
                     print("[LOGIN] Error: \(message ?? "nil")")
                     isLoading = false
-                    errorMessage = "Invalid email or password. Please try again."
+                    errorMessage = (message.isEmpty == false)
+                        ? message
+                        : "Invalid email or password. Please try again."
 
                 case .loading:
                     break
@@ -130,7 +132,9 @@ class LoginViewModel {
             } catch {
                 print("[LOGIN] Exception: \(error.localizedDescription)")
                 isLoading = false
-                errorMessage = "Invalid email or password. Please try again."
+                errorMessage = error.localizedDescription.isEmpty
+                    ? "Invalid email or password. Please try again."
+                    : error.localizedDescription
             }
         }
     }

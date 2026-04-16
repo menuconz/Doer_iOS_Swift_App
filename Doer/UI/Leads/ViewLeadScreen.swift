@@ -74,6 +74,7 @@ struct ViewLeadScreen: View {
                     }
                     .padding(20)
                 }
+                .scrollDismissesKeyboard(.interactively)
             }
         }
         .background(bgColor)

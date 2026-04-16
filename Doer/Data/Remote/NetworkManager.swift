@@ -235,6 +235,26 @@ class NetworkManager {
     }
 
     // MARK: - POST Request returning String
+    func postString<B: Encodable>(_ endpoint: String, body: B) async throws -> String {
+        return try await withCheckedThrowingContinuation { continuation in
+            session.request(
+                baseURL + endpoint,
+                method: .post,
+                parameters: body,
+                encoder: JSONParameterEncoder(encoder: NetworkManager.jsonEncoder)
+            )
+            .validate()
+            .responseString { response in
+                switch response.result {
+                case .success(let value):
+                    continuation.resume(returning: value)
+                case .failure(let error):
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+
     func postString(_ endpoint: String, parameters: [String: Any]? = nil) async throws -> String {
         return try await withCheckedThrowingContinuation { continuation in
             session.request(

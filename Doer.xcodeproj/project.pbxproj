@@ -27,6 +27,7 @@
 		2203AAF3E5FC67C05D750677 /* GenerateOTPScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEEE5C38F2205892362F9913 /* GenerateOTPScreen.swift */; };
 		225EFE19C3C95689030796B4 /* DayDetailScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = C999D36838DC5B924EF35A7F /* DayDetailScreen.swift */; };
 		23D8E1F86069245697B51282 /* ViewDocumentViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B38F0074E8A39F695CFFCE6 /* ViewDocumentViewModel.swift */; };
+		274314542F84C89F001B87E8 /* GoogleNavigation in Frameworks */ = {isa = PBXBuildFile; productRef = 274314532F84C89F001B87E8 /* GoogleNavigation */; };
 		2786F3722F699ECC009E1F4B /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 2786F3712F699ECC009E1F4B /* FirebaseAnalytics */; };
 		2786F3742F699ECC009E1F4B /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 2786F3732F699ECC009E1F4B /* FirebaseCore */; };
 		2786F3762F699ECC009E1F4B /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 2786F3752F699ECC009E1F4B /* FirebaseCrashlytics */; };
@@ -97,7 +98,15 @@
 		A2ED55DB1DBC86C0AAA504F4 /* RegisterContractorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4494ECD4F0B71DBEDAD9BD46 /* RegisterContractorViewModel.swift */; };
 		A424408BBAEFC2539B75180D /* SendFeedbackScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = E965CB5B98C1BF07F8C5747B /* SendFeedbackScreen.swift */; };
 		A55BE6384EDB891A01AF3F67 /* NetworkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 711290AA2AFB2F65E2D62DB4 /* NetworkManager.swift */; };
+		AA1B2C3D4E5F6A7B8C9D0E1F /* TrackingDto.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB2C3D4E5F6A7B8C9D0E1F2A /* TrackingDto.swift */; };
+		AA3B4C5D6E7F8A9B0C1D2E3F /* TrackingNotificationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB4C5D6E7F8A9B0C1D2E3F4A /* TrackingNotificationHelper.swift */; };
+		AA7B8C9D0E1F2A3B4C5D6E7F /* TrackingRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB8C9D0E1F2A3B4C5D6E7F8A /* TrackingRepository.swift */; };
+		AB1C2D3E4F5A6B7C8D9E0F1A /* TimeTrackingDto.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC2D3E4F5A6B7C8D9E0F1A2B /* TimeTrackingDto.swift */; };
 		ABA170EBDF0962A7B9FC5861 /* ChatMessageApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CD9495DB93BD178E68774FD /* ChatMessageApi.swift */; };
+		AC2D3E4F5A6B7C8D9E0F1A2B /* GeofenceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD3E4F5A6B7C8D9E0F1A2B3C /* GeofenceManager.swift */; };
+		AD4E5F6A1B2C3D4E5F6A7B8C /* LiveTrackingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE5F6A7B1C2D3E4F5A6B7C8D /* LiveTrackingView.swift */; };
+		AE5F6A7B2C3D4E5F6A7B8C9D /* LiveTrackingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF6A7B8C2D3E4F5A6B7C8D9E /* LiveTrackingViewModel.swift */; };
+		AF6A7B8C3D4E5F6A7B8C9D0E /* TimeTrackingDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7B8C9D3E4F5A6B7C8D9E0F /* TimeTrackingDashboardView.swift */; };
 		B26D9266938B4CAF5E4EB7EE /* ShiftFilesScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14A23C9A65D7DF9DEF92410F /* ShiftFilesScreen.swift */; };
 		B3325228E37557EB98880243 /* ForgotPasswordViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4137847B073A504460DAA44D /* ForgotPasswordViewModel.swift */; };
 		B347F5A1EDDF5819B6D20161 /* LeadRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D6AF286C5066CB6FF9EC83C /* LeadRepository.swift */; };
@@ -105,6 +114,8 @@
 		B4C60FF899A010E82AF8F65C /* AddNewClientScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2733232206BED3EAFA997297 /* AddNewClientScreen.swift */; };
 		B52E6B43275FBA25117A03F2 /* EmailDto.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4084C0DDE9B7985C5E7B62C4 /* EmailDto.swift */; };
 		BA5731787EA85EB7D32C1E03 /* ChatMessageRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02C9703E41862FA6B7F36879 /* ChatMessageRepository.swift */; };
+		BA7B8C9D4E5F6A7B8C9D0E1F /* TimeTrackingDashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8C9D0E4F5A6B7C8D9E0F1A /* TimeTrackingDashboardViewModel.swift */; };
+		BB8C9D0E5F6A7B8C9D0E1F2A /* TurnByTurnNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC9D0E1F5A6B7C8D9E0F1A2B /* TurnByTurnNavigationView.swift */; };
 		BC78D9A5F577829E929BC588 /* AccountApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD85A836BC8FD34ABC9771ED /* AccountApi.swift */; };
 		BF69CA2FE5E7B18B180D48E2 /* AddNewClientViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B035AFD1D05A535729CCF2B /* AddNewClientViewModel.swift */; };
 		C184D3F5CEE95785F04C076F /* ProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97852F620991555095F79690 /* ProfileViewModel.swift */; };
@@ -112,13 +123,20 @@
 		C47CD41C682E612FA3CF8C35 /* AddNewLeadScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 775A559E0A3BDD93C5D1BC55 /* AddNewLeadScreen.swift */; };
 		C4F737EE7EB83805A7A74289 /* DayTimelineScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80655CB122885B9A9C28BE80 /* DayTimelineScreen.swift */; };
 		C6638E76A608CAE3CEE0BEB1 /* CaregiverLevelRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5585D733461CDA3A2F7EB4F5 /* CaregiverLevelRepository.swift */; };
+		CC3D4E5F6A7B8C9D0E1F2A3B /* TrackingApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD4E5F6A7B8C9D0E1F2A3B4C /* TrackingApi.swift */; };
+		CC9D0E1F2A3B4C5D6E7F8A9B /* TimeTrackingRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0E1F2A3B4C5D6E7F8A9B0C /* TimeTrackingRepository.swift */; };
+		CD0E1F2A5B6C7D8E9F0A1B2C /* NavigationMapScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE1F2A3B5C6D7E8F9A0B1C2D /* NavigationMapScreen.swift */; };
 		CDCD90B448F7BF205639340F /* ClientDto.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5229A33645EE1AB377FD08E /* ClientDto.swift */; };
 		CDD2B21E354EFE49F0F1BA7E /* ViewDocumentScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B377384014F2888A68174C1 /* ViewDocumentScreen.swift */; };
 		CDEDE5AD03A784E12159F89B /* SubItemMessagesScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15ADDEFD2C51A8353BA7CF68 /* SubItemMessagesScreen.swift */; };
+		CE1F2A3B6C7D8E9F0A1B2C3D /* NavigationMapViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF2A3B4C6D7E8F9A0B1C2D3E /* NavigationMapViewModel.swift */; };
+		CF2A3B4C7D8E9F0A1B2C3D4E /* OfflineSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA3B4C5D7E8F9A0B1C2D3E4F /* OfflineSyncManager.swift */; };
 		D2732731F4B83F895588A441 /* LeadApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28FBED9AF6ECC2A1A448F384 /* LeadApi.swift */; };
 		DA314E4A8BC2B452652A26B2 /* NewLeadsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31215F77D8241407BE5AB0F2 /* NewLeadsViewModel.swift */; };
 		E9EAB96A291D95E0A1071DC9 /* DoerNavHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52CCC5BC7ACC41E337631474 /* DoerNavHost.swift */; };
 		EA32FB93C4B344DA2D60485B /* AllContractorsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AE796FBD7FCCCFA1C376C12 /* AllContractorsViewModel.swift */; };
+		EE1F2A3B4C5D6E7F8A9B0C1D /* TrackingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF2A3B4C5D6E7F8A9B0C1D2E /* TrackingManager.swift */; };
+		EE5F6A7B8C9D0E1F2A3B4C5D /* TimeTrackingApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF6A7B8C9D0E1F2A3B4C5D6E /* TimeTrackingApi.swift */; };
 		EE7AFE72489D87BE96BA85FF /* FiloKretoTeamScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 742BEB29F5FF3EDF63B28999 /* FiloKretoTeamScreen.swift */; };
 		EED85402D7BBE73A20897F6E /* QuotedLeadsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1E6694586493C89094C2C1 /* QuotedLeadsScreen.swift */; };
 		F2D479F5AB8282D022A2458D /* NotificationsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA697BA885FC73716D760502 /* NotificationsViewModel.swift */; };
@@ -154,6 +172,7 @@
 		2260F7A0BD1E86375C9B26EA /* ChatMessageDto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessageDto.swift; sourceTree = "<group>"; };
 		2278D799DAC5C0C46B453E92 /* QuotedLeadsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuotedLeadsViewModel.swift; sourceTree = "<group>"; };
 		24914142E072AD02EFF2A1E5 /* LocationTrackingRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationTrackingRepository.swift; sourceTree = "<group>"; };
+		27187E892F90E191003542BC /* Doer.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Doer.entitlements; sourceTree = "<group>"; };
 		2733232206BED3EAFA997297 /* AddNewClientScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddNewClientScreen.swift; sourceTree = "<group>"; };
 		28FBED9AF6ECC2A1A448F384 /* LeadApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeadApi.swift; sourceTree = "<group>"; };
 		2B035AFD1D05A535729CCF2B /* AddNewClientViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddNewClientViewModel.swift; sourceTree = "<group>"; };
@@ -214,8 +233,15 @@
 		B9EEC8CC16F5F64E7E51131F /* SubItemMessagesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubItemMessagesViewModel.swift; sourceTree = "<group>"; };
 		BA133D797A0B4C87847E50C7 /* ClientsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientsViewModel.swift; sourceTree = "<group>"; };
 		BA33124AAFC004556AF0495D /* ContractorDetailsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContractorDetailsScreen.swift; sourceTree = "<group>"; };
+		BB2C3D4E5F6A7B8C9D0E1F2A /* TrackingDto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackingDto.swift; sourceTree = "<group>"; };
+		BB4C5D6E7F8A9B0C1D2E3F4A /* TrackingNotificationHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackingNotificationHelper.swift; sourceTree = "<group>"; };
+		BB8C9D0E1F2A3B4C5D6E7F8A /* TrackingRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackingRepository.swift; sourceTree = "<group>"; };
+		BC2D3E4F5A6B7C8D9E0F1A2B /* TimeTrackingDto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeTrackingDto.swift; sourceTree = "<group>"; };
+		BD3E4F5A6B7C8D9E0F1A2B3C /* GeofenceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeofenceManager.swift; sourceTree = "<group>"; };
 		BD85A836BC8FD34ABC9771ED /* AccountApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountApi.swift; sourceTree = "<group>"; };
+		BE5F6A7B1C2D3E4F5A6B7C8D /* LiveTrackingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveTrackingView.swift; sourceTree = "<group>"; };
 		BF2EA30FE0CDA34192F438A4 /* RegisterContractorScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterContractorScreen.swift; sourceTree = "<group>"; };
+		BF6A7B8C2D3E4F5A6B7C8D9E /* LiveTrackingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveTrackingViewModel.swift; sourceTree = "<group>"; };
 		BFBC143953D4C4E6F9722B5C /* RegisterManagerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterManagerScreen.swift; sourceTree = "<group>"; };
 		C008FC8D5AC361FC1C615A5D /* SubItemFilesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubItemFilesViewModel.swift; sourceTree = "<group>"; };
 		C187D0452E9B746A47C5C545 /* CalendarScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarScreen.swift; sourceTree = "<group>"; };
@@ -223,7 +249,10 @@
 		C63ED4F4AD4BFF89B553ED1B /* EditProfileScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileScreen.swift; sourceTree = "<group>"; };
 		C6FBFBB01902B7CC99F36163 /* SecureStorageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureStorageManager.swift; sourceTree = "<group>"; };
 		C999D36838DC5B924EF35A7F /* DayDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayDetailScreen.swift; sourceTree = "<group>"; };
+		CA7B8C9D3E4F5A6B7C8D9E0F /* TimeTrackingDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeTrackingDashboardView.swift; sourceTree = "<group>"; };
 		CACC8D27962222F48D2A5A1D /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		CB8C9D0E4F5A6B7C8D9E0F1A /* TimeTrackingDashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeTrackingDashboardViewModel.swift; sourceTree = "<group>"; };
+		CC9D0E1F5A6B7C8D9E0F1A2B /* TurnByTurnNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TurnByTurnNavigationView.swift; sourceTree = "<group>"; };
 		CD0B9E6A61CCD7F15B6F9BD6 /* ShiftRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShiftRepository.swift; sourceTree = "<group>"; };
 		CE93E91902AAECA67DD9AEBE /* SubItemFilesScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubItemFilesScreen.swift; sourceTree = "<group>"; };
 		CEA4DCA569CE5C31985B6D41 /* UserDto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDto.swift; sourceTree = "<group>"; };
@@ -235,7 +264,12 @@
 		D46E4A47F59870971CEDB168 /* LogsRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogsRepository.swift; sourceTree = "<group>"; };
 		D54CB77671739A088D241D6D /* ViewModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModifiers.swift; sourceTree = "<group>"; };
 		D94383F50206A355CE59E8AF /* ClientsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientsScreen.swift; sourceTree = "<group>"; };
+		DA3B4C5D7E8F9A0B1C2D3E4F /* OfflineSyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineSyncManager.swift; sourceTree = "<group>"; };
 		DB8663C5231D4EAF8E57F35A /* GenerateOTPViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerateOTPViewModel.swift; sourceTree = "<group>"; };
+		DD0E1F2A3B4C5D6E7F8A9B0C /* TimeTrackingRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeTrackingRepository.swift; sourceTree = "<group>"; };
+		DD4E5F6A7B8C9D0E1F2A3B4C /* TrackingApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackingApi.swift; sourceTree = "<group>"; };
+		DE1F2A3B5C6D7E8F9A0B1C2D /* NavigationMapScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationMapScreen.swift; sourceTree = "<group>"; };
+		DF2A3B4C6D7E8F9A0B1C2D3E /* NavigationMapViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationMapViewModel.swift; sourceTree = "<group>"; };
 		E024D1F333FD258CADD5DE0C /* DIContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DIContainer.swift; sourceTree = "<group>"; };
 		E0AEE31C64D8A49CB5558C3E /* ViewLeadViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewLeadViewModel.swift; sourceTree = "<group>"; };
 		E2CFD709310D621B95046FE3 /* ReviewsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewsScreen.swift; sourceTree = "<group>"; };
@@ -257,6 +291,8 @@
 		FC120F1AD59456128DE626ED /* NotificationsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsScreen.swift; sourceTree = "<group>"; };
 		FC94F547DFB8451EFE22B3CE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		FE3B0E270213C86971F6239D /* SendFeedbackViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendFeedbackViewModel.swift; sourceTree = "<group>"; };
+		FF2A3B4C5D6E7F8A9B0C1D2E /* TrackingManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackingManager.swift; sourceTree = "<group>"; };
+		FF6A7B8C9D0E1F2A3B4C5D6E /* TimeTrackingApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeTrackingApi.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -267,6 +303,7 @@
 				2786F3722F699ECC009E1F4B /* FirebaseAnalytics in Frameworks */,
 				2786F3762F699ECC009E1F4B /* FirebaseCrashlytics in Frameworks */,
 				2786F3782F699ECC009E1F4B /* FirebaseMessaging in Frameworks */,
+				274314542F84C89F001B87E8 /* GoogleNavigation in Frameworks */,
 				2786F3742F699ECC009E1F4B /* FirebaseCore in Frameworks */,
 				6F14A2B0C0B6AB54D187D181 /* Alamofire in Frameworks */,
 			);
@@ -317,6 +354,7 @@
 				DB993AB014B6651976094467 /* Quotation */,
 				297741246826DF977CD9E2ED /* Team */,
 				6317F7AEB63518CA5E4EDD56 /* Theme */,
+				DA1B2C3D4E5F6A7B8C9D0E1F /* Tracking */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -399,6 +437,7 @@
 		4D92E2E26CC30B9C83ACFBAF /* Doer */ = {
 			isa = PBXGroup;
 			children = (
+				27187E892F90E191003542BC /* Doer.entitlements */,
 				A84CAE869C76464DA183E528 /* Assets.xcassets */,
 				5367EF50476D1DFDA4FD3CC4 /* ContentView.swift */,
 				5A34C6D912E72182856D3609 /* DoerApp.swift */,
@@ -461,6 +500,8 @@
 				17617F86868CDAC292A6A7CD /* MiscDto.swift */,
 				C1E26F64F06951FDA84522C8 /* ShiftDto.swift */,
 				68CD1277C17923CFAED9A159 /* ShiftSubItemDto.swift */,
+				BC2D3E4F5A6B7C8D9E0F1A2B /* TimeTrackingDto.swift */,
+				BB2C3D4E5F6A7B8C9D0E1F2A /* TrackingDto.swift */,
 				CEA4DCA569CE5C31985B6D41 /* UserDto.swift */,
 			);
 			path = DTO;
@@ -479,6 +520,8 @@
 				D46E4A47F59870971CEDB168 /* LogsRepository.swift */,
 				ACCFD2EE588C1A3BF8E0A294 /* RestHomeRepository.swift */,
 				CD0B9E6A61CCD7F15B6F9BD6 /* ShiftRepository.swift */,
+				DD0E1F2A3B4C5D6E7F8A9B0C /* TimeTrackingRepository.swift */,
+				BB8C9D0E1F2A3B4C5D6E7F8A /* TrackingRepository.swift */,
 			);
 			path = Repository;
 			sourceTree = "<group>";
@@ -496,6 +539,8 @@
 				91666FC1E5BDC2B9F3F8F7E2 /* LogsApi.swift */,
 				EF6C7841FE09F03DC6291BEB /* RestHomeApi.swift */,
 				3FAC1ED85962B45622A55239 /* ShiftApi.swift */,
+				FF6A7B8C9D0E1F2A3B4C5D6E /* TimeTrackingApi.swift */,
+				DD4E5F6A7B8C9D0E1F2A3B4C /* TrackingApi.swift */,
 			);
 			path = API;
 			sourceTree = "<group>";
@@ -561,9 +606,27 @@
 			isa = PBXGroup;
 			children = (
 				9674F5C245847ACF70EDF6B7 /* FirebaseMessagingService.swift */,
+				BD3E4F5A6B7C8D9E0F1A2B3C /* GeofenceManager.swift */,
 				41674F0AFD0DB4DE56A75C85 /* LocationTrackingService.swift */,
+				DA3B4C5D7E8F9A0B1C2D3E4F /* OfflineSyncManager.swift */,
+				FF2A3B4C5D6E7F8A9B0C1D2E /* TrackingManager.swift */,
+				BB4C5D6E7F8A9B0C1D2E3F4A /* TrackingNotificationHelper.swift */,
 			);
 			path = Service;
+			sourceTree = "<group>";
+		};
+		DA1B2C3D4E5F6A7B8C9D0E1F /* Tracking */ = {
+			isa = PBXGroup;
+			children = (
+				BE5F6A7B1C2D3E4F5A6B7C8D /* LiveTrackingView.swift */,
+				BF6A7B8C2D3E4F5A6B7C8D9E /* LiveTrackingViewModel.swift */,
+				DE1F2A3B5C6D7E8F9A0B1C2D /* NavigationMapScreen.swift */,
+				DF2A3B4C6D7E8F9A0B1C2D3E /* NavigationMapViewModel.swift */,
+				CA7B8C9D3E4F5A6B7C8D9E0F /* TimeTrackingDashboardView.swift */,
+				CB8C9D0E4F5A6B7C8D9E0F1A /* TimeTrackingDashboardViewModel.swift */,
+				CC9D0E1F5A6B7C8D9E0F1A2B /* TurnByTurnNavigationView.swift */,
+			);
+			path = Tracking;
 			sourceTree = "<group>";
 		};
 		DB993AB014B6651976094467 /* Quotation */ = {
@@ -657,6 +720,7 @@
 				2786F3732F699ECC009E1F4B /* FirebaseCore */,
 				2786F3752F699ECC009E1F4B /* FirebaseCrashlytics */,
 				2786F3772F699ECC009E1F4B /* FirebaseMessaging */,
+				274314532F84C89F001B87E8 /* GoogleNavigation */,
 			);
 			productName = Doer;
 			productReference = B2E640CBA9A83B40B24B7A33 /* Doer.app */;
@@ -683,6 +747,7 @@
 			packageReferences = (
 				04955B544840D19E3F89F3F2 /* XCRemoteSwiftPackageReference "Alamofire" */,
 				2786F3702F699ECC009E1F4B /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				274314522F84C89F001B87E8 /* XCRemoteSwiftPackageReference "ios-navigation-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 4043581197A89E3A6345CCBD /* Products */;
@@ -829,6 +894,23 @@
 				68315B03306E946641045977 /* ViewModifiers.swift in Sources */,
 				847BEFC69EF0BDD2418F35F6 /* ViewQuotationsScreen.swift in Sources */,
 				153D43379DDAF24112738B24 /* ViewQuotationsViewModel.swift in Sources */,
+				AB1C2D3E4F5A6B7C8D9E0F1A /* TimeTrackingDto.swift in Sources */,
+				AC2D3E4F5A6B7C8D9E0F1A2B /* GeofenceManager.swift in Sources */,
+				AA1B2C3D4E5F6A7B8C9D0E1F /* TrackingDto.swift in Sources */,
+				CC3D4E5F6A7B8C9D0E1F2A3B /* TrackingApi.swift in Sources */,
+				EE5F6A7B8C9D0E1F2A3B4C5D /* TimeTrackingApi.swift in Sources */,
+				AA7B8C9D0E1F2A3B4C5D6E7F /* TrackingRepository.swift in Sources */,
+				CC9D0E1F2A3B4C5D6E7F8A9B /* TimeTrackingRepository.swift in Sources */,
+				EE1F2A3B4C5D6E7F8A9B0C1D /* TrackingManager.swift in Sources */,
+				AA3B4C5D6E7F8A9B0C1D2E3F /* TrackingNotificationHelper.swift in Sources */,
+				AD4E5F6A1B2C3D4E5F6A7B8C /* LiveTrackingView.swift in Sources */,
+				AE5F6A7B2C3D4E5F6A7B8C9D /* LiveTrackingViewModel.swift in Sources */,
+				AF6A7B8C3D4E5F6A7B8C9D0E /* TimeTrackingDashboardView.swift in Sources */,
+				BA7B8C9D4E5F6A7B8C9D0E1F /* TimeTrackingDashboardViewModel.swift in Sources */,
+				BB8C9D0E5F6A7B8C9D0E1F2A /* TurnByTurnNavigationView.swift in Sources */,
+				CD0E1F2A5B6C7D8E9F0A1B2C /* NavigationMapScreen.swift in Sources */,
+				CE1F2A3B6C7D8E9F0A1B2C3D /* NavigationMapViewModel.swift in Sources */,
+				CF2A3B4C7D8E9F0A1B2C3D4E /* OfflineSyncManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -839,8 +921,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Doer/Doer.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 500;
+				CURRENT_PROJECT_VERSION = 501;
 				DEVELOPMENT_TEAM = 7JKF784S57;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Doer/Info.plist;
@@ -859,8 +942,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Doer/Doer.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 500;
+				CURRENT_PROJECT_VERSION = 501;
 				DEVELOPMENT_TEAM = 7JKF784S57;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Doer/Info.plist;
@@ -1038,6 +1122,14 @@
 				minimumVersion = 5.9.0;
 			};
 		};
+		274314522F84C89F001B87E8 /* XCRemoteSwiftPackageReference "ios-navigation-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googlemaps/ios-navigation-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.1.2;
+			};
+		};
 		2786F3702F699ECC009E1F4B /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
@@ -1049,6 +1141,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		274314532F84C89F001B87E8 /* GoogleNavigation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 274314522F84C89F001B87E8 /* XCRemoteSwiftPackageReference "ios-navigation-sdk" */;
+			productName = GoogleNavigation;
+		};
 		2786F3712F699ECC009E1F4B /* FirebaseAnalytics */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 2786F3702F699ECC009E1F4B /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
