@@ -72,7 +72,11 @@ steps:
         -sdk iphoneos26.2 \
         -destination "generic/platform=iOS" \
         -configuration Release \
-        -archivePath "$(Build.ArtifactStagingDirectory)/Doer.xcarchive"
+        -archivePath "$(Build.ArtifactStagingDirectory)/Doer.xcarchive" \
+        CODE_SIGN_STYLE=Manual \
+        DEVELOPMENT_TEAM=7JKF784S57 \
+        PROVISIONING_PROFILE_SPECIFIER="DoerApp_Distribution_2026_May" \
+        CODE_SIGN_IDENTITY="Apple Distribution"
 
   # Create the exportOptions.plist file dynamically
   - script: |
@@ -98,7 +102,7 @@ steps:
     displayName: 'Create exportOptions.plist'
   # Export IPA
   - script: |
-      /Applications/Xcode_26.0.1.app/Contents/Developer/usr/bin/xcodebuild -exportArchive \
+      /Applications/Xcode_26.2.app/Contents/Developer/usr/bin/xcodebuild -exportArchive \
         -archivePath "$(Build.ArtifactStagingDirectory)/Doer.xcarchive" \
         -exportPath "$(Build.ArtifactStagingDirectory)/export" \
         -exportOptionsPlist exportOptions.plist
