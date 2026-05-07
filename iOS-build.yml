@@ -74,9 +74,7 @@ steps:
         -configuration Release \
         -archivePath "$(Build.ArtifactStagingDirectory)/Doer.xcarchive" \
         CODE_SIGN_STYLE=Manual \
-        DEVELOPMENT_TEAM=7JKF784S57 \
-        PROVISIONING_PROFILE_SPECIFIER="DoerApp_Distribution_2026_May" \
-        CODE_SIGN_IDENTITY="Apple Distribution"
+        DEVELOPMENT_TEAM=7JKF784S57
 
   # Create the exportOptions.plist file dynamically
   - script: |

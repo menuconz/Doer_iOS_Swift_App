@@ -107,6 +107,17 @@
 		AD4E5F6A1B2C3D4E5F6A7B8C /* LiveTrackingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE5F6A7B1C2D3E4F5A6B7C8D /* LiveTrackingView.swift */; };
 		AE5F6A7B2C3D4E5F6A7B8C9D /* LiveTrackingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF6A7B8C2D3E4F5A6B7C8D9E /* LiveTrackingViewModel.swift */; };
 		AF6A7B8C3D4E5F6A7B8C9D0E /* TimeTrackingDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7B8C9D3E4F5A6B7C8D9E0F /* TimeTrackingDashboardView.swift */; };
+		B0A1B000000000000B001001 /* BoardApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A001001 /* BoardApi.swift */; };
+		B0A1B000000000000B001002 /* ActivityLogApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A001002 /* ActivityLogApi.swift */; };
+		B0A1B000000000000B001003 /* BoardRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A001003 /* BoardRepository.swift */; };
+		B0A1B000000000000B001004 /* ActivityLogRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A001004 /* ActivityLogRepository.swift */; };
+		B0A1B000000000000B001005 /* BoardConfigCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A001005 /* BoardConfigCache.swift */; };
+		B0A1B000000000000B001006 /* ActivityLogDto.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A001006 /* ActivityLogDto.swift */; };
+		B0A1B000000000000B001007 /* BoardDto.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A001007 /* BoardDto.swift */; };
+		B0A1B000000000000B001008 /* ActivityLogScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A001008 /* ActivityLogScreen.swift */; };
+		B0A1B000000000000B001009 /* ActivityLogViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A001009 /* ActivityLogViewModel.swift */; };
+		B0A1B000000000000B00100A /* BoardSettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A00100A /* BoardSettingsScreen.swift */; };
+		B0A1B000000000000B00100B /* BoardSettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A00100B /* BoardSettingsViewModel.swift */; };
 		B26D9266938B4CAF5E4EB7EE /* ShiftFilesScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14A23C9A65D7DF9DEF92410F /* ShiftFilesScreen.swift */; };
 		B3325228E37557EB98880243 /* ForgotPasswordViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4137847B073A504460DAA44D /* ForgotPasswordViewModel.swift */; };
 		B347F5A1EDDF5819B6D20161 /* LeadRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D6AF286C5066CB6FF9EC83C /* LeadRepository.swift */; };
@@ -150,17 +161,6 @@
 		FB0682E2E8D74B6291B6E3CB /* LogsRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46E4A47F59870971CEDB168 /* LogsRepository.swift */; };
 		FB5D232DD96D0264402B8A36 /* AccountRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69FBEB48F1DAF5648004B905 /* AccountRepository.swift */; };
 		FF2568CC59229238832DEB45 /* ShiftRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0B9E6A61CCD7F15B6F9BD6 /* ShiftRepository.swift */; };
-		B0A1B000000000000B001001 /* BoardApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A001001 /* BoardApi.swift */; };
-		B0A1B000000000000B001002 /* ActivityLogApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A001002 /* ActivityLogApi.swift */; };
-		B0A1B000000000000B001003 /* BoardRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A001003 /* BoardRepository.swift */; };
-		B0A1B000000000000B001004 /* ActivityLogRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A001004 /* ActivityLogRepository.swift */; };
-		B0A1B000000000000B001005 /* BoardConfigCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A001005 /* BoardConfigCache.swift */; };
-		B0A1B000000000000B001006 /* ActivityLogDto.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A001006 /* ActivityLogDto.swift */; };
-		B0A1B000000000000B001007 /* BoardDto.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A001007 /* BoardDto.swift */; };
-		B0A1B000000000000B001008 /* ActivityLogScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A001008 /* ActivityLogScreen.swift */; };
-		B0A1B000000000000B001009 /* ActivityLogViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A001009 /* ActivityLogViewModel.swift */; };
-		B0A1B000000000000B00100A /* BoardSettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A00100A /* BoardSettingsScreen.swift */; };
-		B0A1B000000000000B00100B /* BoardSettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A00100B /* BoardSettingsViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -235,6 +235,17 @@
 		AC1D1941CD459D3A708974BD /* ForgotPasswordScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgotPasswordScreen.swift; sourceTree = "<group>"; };
 		ACCFD2EE588C1A3BF8E0A294 /* RestHomeRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestHomeRepository.swift; sourceTree = "<group>"; };
 		AEEE5C38F2205892362F9913 /* GenerateOTPScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerateOTPScreen.swift; sourceTree = "<group>"; };
+		B0A1D000000000000A001001 /* BoardApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardApi.swift; sourceTree = "<group>"; };
+		B0A1D000000000000A001002 /* ActivityLogApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityLogApi.swift; sourceTree = "<group>"; };
+		B0A1D000000000000A001003 /* BoardRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardRepository.swift; sourceTree = "<group>"; };
+		B0A1D000000000000A001004 /* ActivityLogRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityLogRepository.swift; sourceTree = "<group>"; };
+		B0A1D000000000000A001005 /* BoardConfigCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardConfigCache.swift; sourceTree = "<group>"; };
+		B0A1D000000000000A001006 /* ActivityLogDto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityLogDto.swift; sourceTree = "<group>"; };
+		B0A1D000000000000A001007 /* BoardDto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardDto.swift; sourceTree = "<group>"; };
+		B0A1D000000000000A001008 /* ActivityLogScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityLogScreen.swift; sourceTree = "<group>"; };
+		B0A1D000000000000A001009 /* ActivityLogViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityLogViewModel.swift; sourceTree = "<group>"; };
+		B0A1D000000000000A00100A /* BoardSettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardSettingsScreen.swift; sourceTree = "<group>"; };
+		B0A1D000000000000A00100B /* BoardSettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardSettingsViewModel.swift; sourceTree = "<group>"; };
 		B2E640CBA9A83B40B24B7A33 /* Doer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Doer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B37F16B24026B3D51183324E /* NullSafeCoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NullSafeCoding.swift; sourceTree = "<group>"; };
 		B61E3CD489C3FF74DB17396B /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
@@ -304,17 +315,6 @@
 		FE3B0E270213C86971F6239D /* SendFeedbackViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendFeedbackViewModel.swift; sourceTree = "<group>"; };
 		FF2A3B4C5D6E7F8A9B0C1D2E /* TrackingManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackingManager.swift; sourceTree = "<group>"; };
 		FF6A7B8C9D0E1F2A3B4C5D6E /* TimeTrackingApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeTrackingApi.swift; sourceTree = "<group>"; };
-		B0A1D000000000000A001001 /* BoardApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardApi.swift; sourceTree = "<group>"; };
-		B0A1D000000000000A001002 /* ActivityLogApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityLogApi.swift; sourceTree = "<group>"; };
-		B0A1D000000000000A001003 /* BoardRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardRepository.swift; sourceTree = "<group>"; };
-		B0A1D000000000000A001004 /* ActivityLogRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityLogRepository.swift; sourceTree = "<group>"; };
-		B0A1D000000000000A001005 /* BoardConfigCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardConfigCache.swift; sourceTree = "<group>"; };
-		B0A1D000000000000A001006 /* ActivityLogDto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityLogDto.swift; sourceTree = "<group>"; };
-		B0A1D000000000000A001007 /* BoardDto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardDto.swift; sourceTree = "<group>"; };
-		B0A1D000000000000A001008 /* ActivityLogScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityLogScreen.swift; sourceTree = "<group>"; };
-		B0A1D000000000000A001009 /* ActivityLogViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityLogViewModel.swift; sourceTree = "<group>"; };
-		B0A1D000000000000A00100A /* BoardSettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardSettingsScreen.swift; sourceTree = "<group>"; };
-		B0A1D000000000000A00100B /* BoardSettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardSettingsViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -381,24 +381,6 @@
 				DA1B2C3D4E5F6A7B8C9D0E1F /* Tracking */,
 			);
 			path = UI;
-			sourceTree = "<group>";
-		};
-		B0A1G000000000000G001001 /* ActivityLog */ = {
-			isa = PBXGroup;
-			children = (
-				B0A1D000000000000A001008 /* ActivityLogScreen.swift */,
-				B0A1D000000000000A001009 /* ActivityLogViewModel.swift */,
-			);
-			path = ActivityLog;
-			sourceTree = "<group>";
-		};
-		B0A1G000000000000G001002 /* BoardSettings */ = {
-			isa = PBXGroup;
-			children = (
-				B0A1D000000000000A00100A /* BoardSettingsScreen.swift */,
-				B0A1D000000000000A00100B /* BoardSettingsViewModel.swift */,
-			);
-			path = BoardSettings;
 			sourceTree = "<group>";
 		};
 		163BE829F4ADEFE8A1985E11 /* Messages */ = {
@@ -629,6 +611,24 @@
 				BA133D797A0B4C87847E50C7 /* ClientsViewModel.swift */,
 			);
 			path = Clients;
+			sourceTree = "<group>";
+		};
+		B0A1G000000000000G001001 /* ActivityLog */ = {
+			isa = PBXGroup;
+			children = (
+				B0A1D000000000000A001008 /* ActivityLogScreen.swift */,
+				B0A1D000000000000A001009 /* ActivityLogViewModel.swift */,
+			);
+			path = ActivityLog;
+			sourceTree = "<group>";
+		};
+		B0A1G000000000000G001002 /* BoardSettings */ = {
+			isa = PBXGroup;
+			children = (
+				B0A1D000000000000A00100A /* BoardSettingsScreen.swift */,
+				B0A1D000000000000A00100B /* BoardSettingsViewModel.swift */,
+			);
+			path = BoardSettings;
 			sourceTree = "<group>";
 		};
 		B46CA9F3C1547B34FFA3494F /* Feedback */ = {
@@ -983,8 +983,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Doer/Doer.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 502;
-				DEVELOPMENT_TEAM = 7JKF784S57;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 7JKF784S57;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Doer/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -993,6 +996,8 @@
 				);
 				MARKETING_VERSION = 2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = nz.co.doer;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = DoerApp_Distribution_2026_May;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -1004,8 +1009,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Doer/Doer.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 502;
-				DEVELOPMENT_TEAM = 7JKF784S57;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 7JKF784S57;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Doer/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1014,6 +1022,8 @@
 				);
 				MARKETING_VERSION = 2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = nz.co.doer;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = DoerApp_Distribution_2026_May;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
