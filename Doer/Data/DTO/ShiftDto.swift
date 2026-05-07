@@ -33,6 +33,7 @@ struct ShiftDto: Codable, Identifiable, Hashable {
     var statusMessage: String = ""
     var statusColor: String = ""
     var amount: Double? = nil
+    var actualInvoiceAmount: Double? = nil // Editable by Admin/Manager only
     var caregiverLevelId: Int? = nil
     var caregiverLevelName: String? = nil
     var paymarkPaymentUrl: String = ""
@@ -103,6 +104,7 @@ struct ShiftDto: Codable, Identifiable, Hashable {
         case statusMessage
         case statusColor
         case amount
+        case actualInvoiceAmount
         case caregiverLevelId
         case caregiverLevelName
         case paymarkPaymentUrl = "paymarkPaymentURL"

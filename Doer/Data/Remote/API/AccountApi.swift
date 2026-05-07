@@ -120,6 +120,34 @@ class AccountApi {
         }
     }
 
+    // Toggle the IsEmployee flag on a contractor. Admin/Manager only (gated client-side).
+    func markAsEmployee(userId: String, isEmployee: Bool, adminId: String) async throws -> UserDto {
+        return try await withCheckedThrowingContinuation { continuation in
+            network.session.request(
+                network.baseURL + "User/MarkAsEmployee",
+                method: .post,
+                parameters: ["userId": userId, "isEmployee": isEmployee, "adminId": adminId],
+                encoding: URLEncoding.default
+            )
+            .validate()
+            .responseData { response in
+                switch response.result {
+                case .success(let data):
+                    do {
+                        let decoder = JSONDecoder()
+                        decoder.keyDecodingStrategy = .useDefaultKeys
+                        let user = try decoder.decode(UserDto.self, from: data)
+                        continuation.resume(returning: user)
+                    } catch {
+                        continuation.resume(throwing: error)
+                    }
+                case .failure(let error):
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+
     func getAllContractors() async throws -> [UserDto] {
         return try await network.get("User/GetCaregiverUsers")
     }

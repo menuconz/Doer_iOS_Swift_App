@@ -125,6 +125,47 @@ class NetworkManager {
         }
     }
 
+    // MARK: - PUT Request
+    func put<T: Decodable, B: Encodable>(_ endpoint: String, body: B) async throws -> T {
+        print("[NET] PUT \(endpoint)")
+        return try await withCheckedThrowingContinuation { continuation in
+            session.request(
+                baseURL + endpoint,
+                method: .put,
+                parameters: body,
+                encoder: JSONParameterEncoder(encoder: Self.jsonEncoder)
+            )
+            .validate()
+            .responseData { response in
+                let statusCode = response.response?.statusCode ?? 0
+                print("[NET] PUT \(endpoint) status: \(statusCode)")
+                switch response.result {
+                case .success(let data):
+                    do {
+                        let value = try Self.jsonDecoder.decode(T.self, from: data)
+                        continuation.resume(returning: value)
+                    } catch {
+                        if let errorString = String(data: data, encoding: .utf8) {
+                            let cleanError = errorString.trimmingCharacters(in: .whitespacesAndNewlines)
+                                .trimmingCharacters(in: CharacterSet(charactersIn: "\""))
+                            continuation.resume(throwing: NSError(domain: "", code: statusCode, userInfo: [NSLocalizedDescriptionKey: cleanError]))
+                        } else {
+                            continuation.resume(throwing: error)
+                        }
+                    }
+                case .failure(let error):
+                    if let data = response.data, let errorString = String(data: data, encoding: .utf8) {
+                        let cleanError = errorString.trimmingCharacters(in: .whitespacesAndNewlines)
+                            .trimmingCharacters(in: CharacterSet(charactersIn: "\""))
+                        continuation.resume(throwing: NSError(domain: "", code: statusCode, userInfo: [NSLocalizedDescriptionKey: cleanError]))
+                    } else {
+                        continuation.resume(throwing: error)
+                    }
+                }
+            }
+        }
+    }
+
     // MARK: - POST Request returning raw string response
     func postRaw<B: Encodable>(_ endpoint: String, body: B) async throws -> (String, Int) {
         print("[NET] POST-RAW \(endpoint)")

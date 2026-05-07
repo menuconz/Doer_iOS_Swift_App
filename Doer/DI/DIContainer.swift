@@ -20,6 +20,8 @@ class DIContainer {
     lazy var trackingApi = TrackingApi()
     lazy var timeTrackingApi = TimeTrackingApi()
     lazy var logsApi = LogsApi()
+    lazy var boardApi = BoardApi()
+    lazy var activityLogApi = ActivityLogApi()
 
     // MARK: - Repositories
     lazy var accountRepository = AccountRepository(accountApi: accountApi, prefs: preferencesManager)
@@ -34,6 +36,11 @@ class DIContainer {
     lazy var trackingRepository = TrackingRepository(trackingApi: trackingApi, prefs: preferencesManager)
     lazy var timeTrackingRepository = TimeTrackingRepository(timeTrackingApi: timeTrackingApi, prefs: preferencesManager)
     lazy var logsRepository = LogsRepository(logsApi: logsApi, prefs: preferencesManager)
+    lazy var boardRepository = BoardRepository(boardApi: boardApi)
+    lazy var activityLogRepository = ActivityLogRepository(api: activityLogApi)
+
+    // MARK: - Caches
+    lazy var boardConfigCache = BoardConfigCache(boardRepository: boardRepository)
 
     // MARK: - Services
     lazy var googlePlacesService = GooglePlacesService.shared

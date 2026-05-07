@@ -68,7 +68,7 @@ struct ViewLeadScreen: View {
 
                         // Status Section
                         ViewLeadFieldLabel(emoji: "\u{1F4CA}", label: "Status:")
-                        ViewLeadStatusFrame(statusName: lead.statusName, statusColor: NewLeadsViewModel.getLeadStatusColor(lead.statusId))
+                        ViewLeadStatusFrame(statusName: lead.statusName, statusColor: viewModel.leadStatusColor(lead.statusId))
 
                         // NOTE: Action buttons are commented out in MAUI ViewLead.xaml
                     }

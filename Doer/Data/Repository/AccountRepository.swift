@@ -182,6 +182,10 @@ class AccountRepository {
         return await safeApiCall { try await self.accountApi.deleteUserAccount(userId: userId) }
     }
 
+    func markAsEmployee(userId: String, isEmployee: Bool, adminId: String) async -> ApiResult<UserDto> {
+        return await safeApiCall { try await self.accountApi.markAsEmployee(userId: userId, isEmployee: isEmployee, adminId: adminId) }
+    }
+
     func getAllContractors() async -> ApiResult<[UserDto]> {
         return await safeApiCall { try await self.accountApi.getAllContractors() }
     }

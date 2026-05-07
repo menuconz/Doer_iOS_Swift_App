@@ -1,0 +1,30 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: 'macos-15'
+
+variables:
+  applicationId: 'nz.co.doer'
+  versionNumber: '2.1'
+  buildConfiguration: 'Release'
+
+stages:
+- stage: Build
+  jobs:
+  - job: BuildJob
+    steps:
+    - template: iOS-build.yml
+      parameters:
+        applicationId: $(applicationId)
+        versionNumber: $(versionNumber)
+        buildConfiguration: $(buildConfiguration)
+        
+#condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+- stage: Publish
+  jobs:
+  - job: PublishJob
+    steps:
+    - template: publishappstore.yml

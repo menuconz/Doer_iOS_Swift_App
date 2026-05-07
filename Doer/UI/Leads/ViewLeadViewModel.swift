@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import UIKit
 
 @Observable
 class ViewLeadViewModel {
@@ -18,17 +19,38 @@ class ViewLeadViewModel {
 
     private let leadRepository: LeadRepository
     private let preferencesManager: PreferencesManager
+    private let boardConfigCache: BoardConfigCache
     private let leadId: Int
     private var hasLoaded = false
 
     init(
         leadId: Int,
         leadRepository: LeadRepository = DIContainer.shared.leadRepository,
-        preferencesManager: PreferencesManager = DIContainer.shared.preferencesManager
+        preferencesManager: PreferencesManager = DIContainer.shared.preferencesManager,
+        boardConfigCache: BoardConfigCache = DIContainer.shared.boardConfigCache
     ) {
         self.leadId = leadId
         self.leadRepository = leadRepository
         self.preferencesManager = preferencesManager
+        self.boardConfigCache = boardConfigCache
+    }
+
+    func leadStatusColor(_ statusId: Int) -> Color {
+        let argb = boardConfigCache.color(
+            "LeadStatus", value: statusId,
+            fallback: argbFromColor(NewLeadsViewModel.getLeadStatusColor(statusId))
+        )
+        return Color(argb: argb)
+    }
+
+    private func argbFromColor(_ c: Color) -> UInt32 {
+        let ui = UIColor(c)
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        ui.getRed(&r, green: &g, blue: &b, alpha: &a)
+        return (UInt32((a * 255).rounded()) & 0xFF) << 24
+            | (UInt32((r * 255).rounded()) & 0xFF) << 16
+            | (UInt32((g * 255).rounded()) & 0xFF) << 8
+            |  UInt32((b * 255).rounded()) & 0xFF
     }
 
     func loadInitialData() {

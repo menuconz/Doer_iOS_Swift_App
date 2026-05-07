@@ -69,6 +69,23 @@ enum SubItemStatus: Int, Codable {
     }
 }
 
+// MARK: - JobCategory
+enum JobCategory: Int, Codable {
+    case primary = 1
+    case secondary = 2
+
+    static func fromValue(_ value: Int) -> JobCategory {
+        return JobCategory(rawValue: value) ?? .primary
+    }
+
+    func toDisplayString() -> String {
+        switch self {
+        case .primary: return "Primary"
+        case .secondary: return "Secondary"
+        }
+    }
+}
+
 // MARK: - HSRequiredStatus
 enum HSRequiredStatus: Int, Codable {
     case noHS = 0

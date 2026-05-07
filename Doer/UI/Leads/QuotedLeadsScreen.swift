@@ -266,7 +266,7 @@ private struct QuotedSectionView: View {
                                         EditableCellView(text: lead.ownerName, width: colOwner) {
                                             onEditLead(lead, .owner)
                                         }
-                                        SolidColorCellView(text: lead.statusName, width: colStatus, bgColor: NewLeadsViewModel.getLeadStatusColor(lead.statusId)) {
+                                        SolidColorCellView(text: lead.statusName, width: colStatus, bgColor: viewModel.leadStatusColor(lead.statusId)) {
                                             onEditLead(lead, .status)
                                         }
                                         EditableCellView(text: lead.costFromQuote != nil ? "\(lead.costFromQuote!)" : "", width: colCost) {
@@ -278,7 +278,7 @@ private struct QuotedSectionView: View {
                                         EditableCellView(text: lead.location, width: colLocation) {
                                             onEditLead(lead, .location)
                                         }
-                                        SolidColorCellView(text: lead.contractTypeName, width: colContractType, bgColor: NewLeadsViewModel.getContractTypeColor(lead.contractType)) {
+                                        SolidColorCellView(text: lead.contractTypeName, width: colContractType, bgColor: viewModel.contractTypeColorDynamic(lead.contractType)) {
                                             onEditLead(lead, .contractType)
                                         }
                                         DataCellView(text: viewModel.formatDate(lead.createdDate), width: colCreatedDate)

@@ -14,6 +14,9 @@ struct DrawerContent: View {
     let onNavigate: (Route) -> Void
     let onLogout: () -> Void
 
+    // Observe the cache so the board name in the drawer updates when admin renames it.
+    @State private var cache: BoardConfigCache = DIContainer.shared.boardConfigCache
+
     var body: some View {
         let menuItems = buildMenuItems()
 
@@ -69,7 +72,9 @@ struct DrawerContent: View {
     private func buildMenuItems() -> [DrawerMenuItem] {
         var items: [DrawerMenuItem] = []
         items.append(DrawerMenuItem(title: "Home", icon: "house", route: .calendar))
-        items.append(DrawerMenuItem(title: "NZ Mahi", icon: "briefcase", route: .mainLeadsJobs))
+        // Use cached board name so admin renames reflect here. Falls back to "NZ Mahi 2026".
+        let boardName = cache.boardName(default: "NZ Mahi 2026")
+        items.append(DrawerMenuItem(title: boardName, icon: "briefcase", route: .mainLeadsJobs))
 
         if prefs.isAdmin {
             items.append(DrawerMenuItem(title: "New Leads", icon: "chart.bar", route: .newLeads, requiresAdmin: true))
@@ -83,6 +88,8 @@ struct DrawerContent: View {
             items.append(DrawerMenuItem(title: "Live Tracking", icon: "location.fill", route: .liveTracking, requiresManager: true))
             items.append(DrawerMenuItem(title: "Time Tracking", icon: "clock", route: .timeTracking, requiresManager: true))
             items.append(DrawerMenuItem(title: "Contractors", icon: "person.3", route: .allContractors, requiresManager: true))
+            items.append(DrawerMenuItem(title: "Board Settings", icon: "slider.horizontal.3", route: .boardSettings, requiresManager: true))
+            items.append(DrawerMenuItem(title: "Activity Log", icon: "clock.arrow.circlepath", route: .activityLog, requiresManager: true))
         }
 
         items.append(DrawerMenuItem(title: "Profile", icon: "person", route: .profile))

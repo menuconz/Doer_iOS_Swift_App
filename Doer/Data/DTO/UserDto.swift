@@ -32,6 +32,7 @@ struct UserDto: Codable, Identifiable {
     var deviceToken: String = ""
     var resourceId: Int = 0
     var adminVerified: Bool = false
+    var isEmployee: Bool = false
     var deviceTypeId: Int = 0
     var address: String = ""
     var latitude: Double? = nil
@@ -85,6 +86,7 @@ struct UserDto: Codable, Identifiable {
         case deviceToken
         case resourceId = "resourceID"
         case adminVerified
+        case isEmployee
         case deviceTypeId
         case address
         case latitude

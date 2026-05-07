@@ -7,6 +7,7 @@ struct ShiftSubItemDto: Codable, Identifiable, Hashable {
     var subitem: String = ""
     var hsRequired: Int = 0
     var status: Int = 0
+    var jobCategory: Int = 1 // 1 = Primary, 2 = Secondary
     var isContractor: Bool = false
     var dateStarted: String? = nil
     var dateCompleted: String? = nil
@@ -37,6 +38,7 @@ struct ShiftSubItemDto: Codable, Identifiable, Hashable {
         case subitem
         case hsRequired
         case status
+        case jobCategory
         case isContractor
         case dateStarted
         case dateCompleted

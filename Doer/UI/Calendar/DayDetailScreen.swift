@@ -5,6 +5,8 @@ struct DayDetailScreen: View {
     @Binding var path: NavigationPath
     let date: String
     @State private var viewModel: DayDetailViewModel
+    // Observe the BoardConfigCache so picker option lists refresh when admin renames dropdowns.
+    @State private var boardConfigCache: BoardConfigCache = DIContainer.shared.boardConfigCache
 
     var shiftId: Int? = nil
 
@@ -21,6 +23,10 @@ struct DayDetailScreen: View {
             .navigationTitle(viewModel.pageTitle)
             .navigationBarTitleDisplayMode(.inline)
             .onAppear { viewModel.refreshData() }
+            .onChange(of: boardConfigCache.version) { _, _ in
+                viewModel.refreshDropdownOptionsFromCache()
+                viewModel.refreshData()
+            }
             .alert("Delete Sub-Item", isPresented: Binding(
                 get: { viewModel.activeDialog == .deleteSubItem },
                 set: { if !$0 { viewModel.dismissDialog() } }
@@ -143,6 +149,15 @@ struct DayDetailScreen: View {
                     onDismiss: { viewModel.dismissDialog() }
                 )
             }
+            .sheet(isPresented: sheetBinding(.subItemCategory)) {
+                let items = viewModel.dynamicJobCategoryItems()
+                OptionListDialogView(
+                    title: "Select Job Category",
+                    items: items.map { ($0.id, $0.name, $0.color) },
+                    onSelect: { id in viewModel.selectSubItemJobCategory(id) },
+                    onDismiss: { viewModel.dismissDialog() }
+                )
+            }
             .sheet(isPresented: sheetBinding(.subItemDate)) {
                 DateTimeDialogView(
                     date: $viewModel.editDate,
@@ -233,12 +248,14 @@ private enum ColW {
     static let jobDescription: CGFloat = 200
     static let quote: CGFloat = 180
     static let contractorQuote: CGFloat = 180
+    static let actualInvoice: CGFloat = 180
     static let status: CGFloat = 180
     static let files: CGFloat = 100
     static let actions: CGFloat = 225
     static let subItem: CGFloat = 200
     static let subHs: CGFloat = 140
     static let subStatus: CGFloat = 120
+    static let subCategory: CGFloat = 130
     static let subDateStarted: CGFloat = 140
     static let subDateCompleted: CGFloat = 140
     static let subFiles: CGFloat = 80
@@ -429,6 +446,7 @@ private struct DataGridHeaderRow: View {
                 DayDetailHeaderCell(text: "Quote (Sent to Client)", width: ColW.quote, sortKey: "Amount", onSort: onSort, getSortIcon: getSortIcon)
             }
             DayDetailHeaderCell(text: "Contractor Quote", width: ColW.contractorQuote, sortKey: "AcceptedQuoteAmount", onSort: onSort, getSortIcon: getSortIcon)
+            DayDetailHeaderCell(text: "Actual Invoice", width: ColW.actualInvoice, sortKey: "ActualInvoiceAmount", onSort: onSort, getSortIcon: getSortIcon)
             DayDetailHeaderCell(text: "Status", width: ColW.status, sortKey: "StatusMessage", onSort: onSort, getSortIcon: getSortIcon)
             HeaderCell(text: "Files", width: ColW.files)
             HeaderCell(text: "Actions", width: ColW.actions)
@@ -548,6 +566,17 @@ private struct DataGridShiftRow: View {
                 }
 
                 DataCell(text: row.shift.acceptedQuoteAmount != nil ? "$\(String(format: "%.2f", row.shift.acceptedQuoteAmount!))" : "", width: ColW.contractorQuote)
+
+                // Actual Invoice — Admin/Manager can edit, others read-only
+                let actualText = row.shift.actualInvoiceAmount != nil ? "$\(String(format: "%.2f", row.shift.actualInvoiceAmount!))" : ""
+                if isOwner {
+                    DataCellClickable(text: actualText, width: ColW.actualInvoice) {
+                        viewModel.editActualInvoice(row.shift.id)
+                    }
+                } else {
+                    DataCell(text: actualText, width: ColW.actualInvoice)
+                }
+
                 ColoredCell(text: row.statusMessage, bgColor: row.statusColor, width: ColW.status)
 
                 // Files
@@ -622,6 +651,7 @@ private struct SubItemsSection: View {
                 SubHeaderCell(text: "\u{1F527} Sub Item", width: ColW.subItem)
                 SubHeaderCell(text: "\u{1F6E1}\u{FE0F} H&S Status", width: ColW.subHs)
                 SubHeaderCell(text: "\u{1F4CA} Status", width: ColW.subStatus)
+                SubHeaderCell(text: "\u{1F3AF} Category", width: ColW.subCategory)
                 SubHeaderCell(text: "\u{1F680} Date Started", width: ColW.subDateStarted)
                 SubHeaderCell(text: "\u{2705} Completed", width: ColW.subDateCompleted)
                 SubHeaderCell(text: "\u{1F4C1} Files", width: ColW.subFiles)
@@ -703,6 +733,18 @@ private struct SubItemRowView: View {
                 .contentShape(Rectangle())
                 .onTapGesture { viewModel.openSubItemStatus(shiftId, subItem.id) }
 
+            // Job Category (Primary/Secondary)
+            Text(viewModel.jobCategoryTextDynamic(subItem.jobCategory))
+                .font(.system(size: 12)).fontWeight(.bold).foregroundColor(.white)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.horizontal, 8)
+                .frame(width: ColW.subCategory, height: 65)
+                .background(viewModel.jobCategoryColorDynamic(subItem.jobCategory))
+                .clipped()
+                .overlay(Rectangle().stroke(Color.gray.opacity(0.5), lineWidth: 0.5))
+                .contentShape(Rectangle())
+                .onTapGesture { viewModel.openSubItemJobCategory(shiftId, subItem.id) }
+
             // Date Started
             Text(subItem.dateStartedString.isEmpty ? "Not Started" : subItem.dateStartedString)
                 .font(.system(size: 12)).fontWeight(.bold).foregroundColor(Color(hex: "374151"))
@@ -783,7 +825,7 @@ private struct AddSubItemRowView: View {
             .border(Color(hex: "28A745"), width: 2)
             .background(Color(hex: "F0F8FF"))
 
-            ForEach(Array([ColW.subHs, ColW.subStatus, ColW.subDateStarted, ColW.subDateCompleted, ColW.subFiles, ColW.subDelete].enumerated()), id: \.offset) { _, w in
+            ForEach(Array([ColW.subHs, ColW.subStatus, ColW.subCategory, ColW.subDateStarted, ColW.subDateCompleted, ColW.subFiles, ColW.subDelete].enumerated()), id: \.offset) { _, w in
                 Rectangle().fill(Color(hex: "F0F8FF"))
                     .frame(width: w, height: 50)
                     .border(Color(hex: "28A745"), width: 2)

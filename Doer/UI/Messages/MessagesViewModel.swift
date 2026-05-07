@@ -381,12 +381,26 @@ class MessagesViewModel {
     }
 
     private func extractMentionedEmails(_ text: String) -> [String] {
+        // Match Android: validate mention boundaries so "@Bob" doesn't match
+        // inside "@Bobby". Start must be string-start or whitespace; end must
+        // be string-end, whitespace, or one of `, . ! ? ;`.
         var emails: [String] = []
         let textLower = text.lowercased()
+        let mentionPunct: Set<Character> = [",", ".", "!", "?", ";"]
         for contractor in contractors {
             let mention = "@\(contractor.displayName)".lowercased()
-            if textLower.contains(mention) && !emails.contains(contractor.email) {
-                emails.append(contractor.email)
+            if mention.count <= 1 { continue }
+            var searchFrom = textLower.startIndex
+            while let range = textLower.range(of: mention, range: searchFrom..<textLower.endIndex) {
+                let validStart = range.lowerBound == textLower.startIndex ||
+                    textLower[textLower.index(before: range.lowerBound)].isWhitespace
+                let validEnd = range.upperBound == textLower.endIndex ||
+                    textLower[range.upperBound].isWhitespace ||
+                    mentionPunct.contains(textLower[range.upperBound])
+                if validStart && validEnd && !emails.contains(contractor.email) {
+                    emails.append(contractor.email)
+                }
+                searchFrom = range.upperBound
             }
         }
         return emails

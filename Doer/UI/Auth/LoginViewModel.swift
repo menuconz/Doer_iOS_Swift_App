@@ -110,8 +110,18 @@ class LoginViewModel {
                         isCaregiver: isCaregiver,
                         isCustomer: isCustomer,
                         isAdmin: isAdmin,
-                        isContractor: isCaregiver
+                        isContractor: isCaregiver,
+                        isEmployee: user.isEmployee
                     )
+
+                    // Login response from the deployed API doesn't always carry IsEmployee
+                    // correctly; GetUserById does. Refetch and overwrite after the session
+                    // is saved so the auth interceptor can attach the bearer token.
+                    if isCaregiver {
+                        if case .success(let fullUser) = await accountRepository.getUser(id: user.id) {
+                            preferencesManager.isEmployee = fullUser.isEmployee
+                        }
+                    }
 
                     secureStorageManager.isLoggedIn = true
 

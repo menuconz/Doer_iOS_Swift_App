@@ -57,12 +57,34 @@ class NavigationMapViewModel: NSObject, CLLocationManagerDelegate {
 
     private func startLocationUpdates() {
         let status = locationManager.authorizationStatus
-        guard status == .authorizedAlways || status == .authorizedWhenInUse else {
+        switch status {
+        case .notDetermined:
+            // Wait for the user's response — handled in locationManagerDidChangeAuthorization.
+            locationManager.requestWhenInUseAuthorization()
+        case .authorizedAlways, .authorizedWhenInUse:
+            locationManager.startUpdatingLocation()
+        case .denied, .restricted:
             isLoading = false
             errorMessage = "Location permission required"
-            return
+        @unknown default:
+            isLoading = false
+            errorMessage = "Location permission required"
         }
-        locationManager.startUpdatingLocation()
+    }
+
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        switch manager.authorizationStatus {
+        case .authorizedAlways, .authorizedWhenInUse:
+            errorMessage = nil
+            manager.startUpdatingLocation()
+        case .denied, .restricted:
+            isLoading = false
+            errorMessage = "Location permission required"
+        case .notDetermined:
+            break
+        @unknown default:
+            break
+        }
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {

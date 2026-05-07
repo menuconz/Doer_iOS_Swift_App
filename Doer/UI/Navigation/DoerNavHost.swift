@@ -335,6 +335,30 @@ struct DoerNavHost: View {
                 )
             )
 
+        case .boardSettings:
+            BoardSettingsScreen()
+                .navigationBarBackButtonHidden(true)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button(action: { withAnimation { showDrawer = true } }) {
+                            Image(systemName: "line.3.horizontal")
+                                .foregroundColor(.white)
+                        }
+                    }
+                }
+
+        case .activityLog:
+            ActivityLogScreen()
+                .navigationBarBackButtonHidden(true)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button(action: { withAnimation { showDrawer = true } }) {
+                            Image(systemName: "line.3.horizontal")
+                                .foregroundColor(.white)
+                        }
+                    }
+                }
+
         default:
             EmptyView()
         }

@@ -19,6 +19,7 @@ class PreferencesManager: ObservableObject {
         static let isCustomer = "is_customer"
         static let isAdmin = "is_admin"
         static let isContractor = "is_contractor"
+        static let isEmployee = "is_employee"
     }
 
     // MARK: - Properties
@@ -61,6 +62,9 @@ class PreferencesManager: ObservableObject {
     @Published var isContractor: Bool {
         didSet { defaults.set(isContractor, forKey: Keys.isContractor) }
     }
+    @Published var isEmployee: Bool {
+        didSet { defaults.set(isEmployee, forKey: Keys.isEmployee) }
+    }
 
     private init() {
         self.fullName = defaults.string(forKey: Keys.fullName) ?? ""
@@ -76,6 +80,7 @@ class PreferencesManager: ObservableObject {
         self.isCustomer = defaults.bool(forKey: Keys.isCustomer)
         self.isAdmin = defaults.bool(forKey: Keys.isAdmin)
         self.isContractor = defaults.bool(forKey: Keys.isContractor)
+        self.isEmployee = defaults.bool(forKey: Keys.isEmployee)
     }
 
     // MARK: - Save User Session
@@ -92,6 +97,7 @@ class PreferencesManager: ObservableObject {
         isCustomer: Bool,
         isAdmin: Bool,
         isContractor: Bool,
+        isEmployee: Bool = false,
         discipline: String = ""
     ) {
         self.fullName = fullName
@@ -106,6 +112,7 @@ class PreferencesManager: ObservableObject {
         self.isCustomer = isCustomer
         self.isAdmin = isAdmin
         self.isContractor = isContractor
+        self.isEmployee = isEmployee
         self.discipline = discipline
     }
 
@@ -124,5 +131,6 @@ class PreferencesManager: ObservableObject {
         isCustomer = false
         isAdmin = false
         isContractor = false
+        isEmployee = false
     }
 }

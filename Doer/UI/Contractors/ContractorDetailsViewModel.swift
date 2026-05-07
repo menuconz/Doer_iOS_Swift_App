@@ -7,6 +7,7 @@ class ContractorDetailsViewModel {
     var errorMessage: String? = nil
 
     private let accountRepository: AccountRepository
+    private let preferencesManager: PreferencesManager
     private let contractorId: String
     private var hasLoaded = false
 
@@ -20,10 +21,32 @@ class ContractorDetailsViewModel {
 
     init(
         contractorId: String,
-        accountRepository: AccountRepository = DIContainer.shared.accountRepository
+        accountRepository: AccountRepository = DIContainer.shared.accountRepository,
+        preferencesManager: PreferencesManager = DIContainer.shared.preferencesManager
     ) {
         self.contractorId = contractorId
         self.accountRepository = accountRepository
+        self.preferencesManager = preferencesManager
+    }
+
+    // Android gates this control on admin only — managers cannot toggle the
+    // employee flag. Mirror that here so the toggle UI shows for the same role.
+    var isCallerAdmin: Bool {
+        preferencesManager.isAdmin
+    }
+
+    func toggleEmployeeFlag(_ newValue: Bool) {
+        guard let current = contractor else { return }
+        Task { @MainActor in
+            let adminId = preferencesManager.userId
+            switch await accountRepository.markAsEmployee(userId: current.id, isEmployee: newValue, adminId: adminId) {
+            case .success(let updated):
+                contractor = updated
+            case .error(let msg, _):
+                errorMessage = msg
+            case .loading: break
+            }
+        }
     }
 
     func loadInitialData() {

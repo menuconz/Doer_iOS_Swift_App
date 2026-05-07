@@ -40,7 +40,8 @@ class AddShiftViewModel {
     var errorMessage: String? = nil
     var isSuccess: Bool = false
 
-    let contractTypes: [ContractTypeOption] = [
+    // Static fallback used when the BoardConfigCache hasn't loaded yet.
+    private let defaultContractTypes: [ContractTypeOption] = [
         ContractTypeOption(id: 0, name: "Select Contract Type"),
         ContractTypeOption(id: 1, name: "To Be Confirmed"),
         ContractTypeOption(id: 2, name: "Full Contract"),
@@ -54,6 +55,15 @@ class AddShiftViewModel {
         ContractTypeOption(id: 10, name: "Other Services"),
         ContractTypeOption(id: 11, name: "Meetings")
     ]
+
+    // Pulls live values from BoardConfigCache so admin-renamed labels appear here.
+    // First entry is always the placeholder "Select Contract Type" (id=0).
+    var contractTypes: [ContractTypeOption] {
+        let cached = boardConfigCache.getOptions("ContractType")
+        if cached.isEmpty { return defaultContractTypes }
+        return [ContractTypeOption(id: 0, name: "Select Contract Type")] +
+            cached.map { ContractTypeOption(id: $0.value, name: $0.displayName) }
+    }
 
     let reminderOptions: [ReminderOption] = [
         ReminderOption(label: "None", offsetMinutes: 0),
@@ -71,6 +81,7 @@ class AddShiftViewModel {
     private let clientRepository: ClientRepository
     private let preferencesManager: PreferencesManager
     private let googlePlacesService: GooglePlacesService
+    private let boardConfigCache: BoardConfigCache
     private var searchTask: Task<Void, Never>? = nil
     private var hasLoaded = false
 
@@ -80,12 +91,14 @@ class AddShiftViewModel {
         shiftRepository: ShiftRepository = DIContainer.shared.shiftRepository,
         clientRepository: ClientRepository = DIContainer.shared.clientRepository,
         preferencesManager: PreferencesManager = DIContainer.shared.preferencesManager,
-        googlePlacesService: GooglePlacesService = DIContainer.shared.googlePlacesService
+        googlePlacesService: GooglePlacesService = DIContainer.shared.googlePlacesService,
+        boardConfigCache: BoardConfigCache = DIContainer.shared.boardConfigCache
     ) {
         self.shiftRepository = shiftRepository
         self.clientRepository = clientRepository
         self.preferencesManager = preferencesManager
         self.googlePlacesService = googlePlacesService
+        self.boardConfigCache = boardConfigCache
 
         // Parse date
         if !date.isEmpty {

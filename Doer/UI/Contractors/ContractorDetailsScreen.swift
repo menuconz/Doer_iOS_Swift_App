@@ -42,6 +42,13 @@ struct ContractorDetailsScreen: View {
                             onViewDocument: onViewDocument,
                             isImageFile: viewModel.isImageFile
                         )
+
+                        if viewModel.isCallerAdmin {
+                            EmployeeToggleCard(
+                                isEmployee: contractor.isEmployee,
+                                onToggle: { viewModel.toggleEmployeeFlag($0) }
+                            )
+                        }
                     }
                     .padding(.horizontal, 20)
                     .padding(.vertical, 30)
@@ -67,6 +74,45 @@ struct ContractorDetailsScreen: View {
             }
         }
         .snackbar(message: Binding(get: { viewModel.errorMessage }, set: { viewModel.errorMessage = $0 }))
+    }
+}
+
+// MARK: - Employee Toggle Card (Admin/Manager only)
+private struct EmployeeToggleCard: View {
+    let isEmployee: Bool
+    let onToggle: (Bool) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Text("\u{1F465}")
+                    .font(.system(size: 18))
+                    .foregroundColor(BlueLabel)
+                Text("Mark as Employee")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(BlueLabel)
+                Spacer()
+                Toggle(
+                    "",
+                    isOn: Binding(
+                        get: { isEmployee },
+                        set: { onToggle($0) }
+                    )
+                )
+                .labelsHidden()
+            }
+            Text(isEmployee
+                 ? "This contractor is currently an Employee."
+                 : "Toggle on to grant this contractor Employee permissions.")
+                .font(.system(size: 13))
+                .foregroundColor(Gray500)
+                .padding(.leading, 26)
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.white)
+        .cornerRadius(16)
+        .shadow(radius: 2)
     }
 }
 

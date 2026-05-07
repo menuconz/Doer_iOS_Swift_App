@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import UIKit
 
 // MARK: - Data Models
 
@@ -98,6 +99,7 @@ enum DayDetailDialog {
     case hsFormStatus
     case subItemHS
     case subItemStatus
+    case subItemCategory
     case subItemDate
     case deleteSubItem
 }
@@ -114,6 +116,7 @@ class DayDetailViewModel {
     var isManager: Bool = false
     var isAdmin: Bool = false
     var isCaregiver: Bool = false
+    var isEmployee: Bool = false
     var isOwner: Bool = false
     var errorMessage: String? = nil
 
@@ -160,6 +163,7 @@ class DayDetailViewModel {
     private let clientRepository: ClientRepository
     private let preferencesManager: PreferencesManager
     private let googlePlacesService: GooglePlacesService
+    private let boardConfigCache: BoardConfigCache
     private let dateStr: String
     private let shiftIdParam: Int?
     private var originalShifts: [ShiftDto] = []
@@ -173,12 +177,14 @@ class DayDetailViewModel {
         shiftRepository: ShiftRepository = DIContainer.shared.shiftRepository,
         clientRepository: ClientRepository = DIContainer.shared.clientRepository,
         preferencesManager: PreferencesManager = DIContainer.shared.preferencesManager,
-        googlePlacesService: GooglePlacesService = DIContainer.shared.googlePlacesService
+        googlePlacesService: GooglePlacesService = DIContainer.shared.googlePlacesService,
+        boardConfigCache: BoardConfigCache = DIContainer.shared.boardConfigCache
     ) {
         self.shiftRepository = shiftRepository
         self.clientRepository = clientRepository
         self.preferencesManager = preferencesManager
         self.googlePlacesService = googlePlacesService
+        self.boardConfigCache = boardConfigCache
         self.dateStr = date.isEmpty ? Self.todayString() : date
         self.shiftIdParam = shiftId
 
@@ -200,18 +206,75 @@ class DayDetailViewModel {
         selectedDate = parsedDate
         selectedDateString = dateFormatted
         pageTitle = pageTitleFormatted
-        contractTypes = Self.contractTypeOptions
-        invoiceStatuses = Self.invoiceStatusOptions
-        hsFormStatuses = Self.hsFormStatusOptions
-        subItemHsOptions = Self.hsRequiredOptions
-        subItemStatusOptions = Self.subItemStatusOpts
+        contractTypes = dynamicContractTypeItems()
+        invoiceStatuses = dynamicInvoiceStatusItems()
+        hsFormStatuses = dynamicHsFormStatusItems()
+        subItemHsOptions = dynamicHsFormStatusItems()
+        subItemStatusOptions = dynamicSubItemStatusItems()
         filterColumns = Self.buildFilterColumns()
 
         isAdmin = preferencesManager.isAdmin
         isManager = preferencesManager.isManager
         isCaregiver = preferencesManager.isCaregiver
+        isEmployee = preferencesManager.isEmployee
         isOwner = preferencesManager.isManager || preferencesManager.isAdmin
     }
+
+    // Public so the screen can call it when BoardConfigCache.version changes.
+    func refreshDropdownOptionsFromCache() {
+        contractTypes = dynamicContractTypeItems()
+        invoiceStatuses = dynamicInvoiceStatusItems()
+        hsFormStatuses = dynamicHsFormStatusItems()
+        subItemHsOptions = dynamicHsFormStatusItems()
+        subItemStatusOptions = dynamicSubItemStatusItems()
+    }
+
+    // Dynamic option builders — read from BoardConfigCache, fall back to static lists.
+    private func dynamicContractTypeItems() -> [ContractTypeItem] {
+        let cached = boardConfigCache.getOptions("ContractType")
+        if cached.isEmpty { return Self.contractTypeOptions }
+        let fallbackByValue = Dictionary(uniqueKeysWithValues: Self.contractTypeOptions.map { ($0.id, $0) })
+        return cached.map { opt in
+            let argb = BoardConfigCache.parseHexColor(opt.color)
+                ?? Self.argbFromColor(fallbackByValue[opt.value]?.color ?? Color(hex: "#C4C4C4"))
+            return ContractTypeItem(id: opt.value, name: opt.displayName, color: Color(argb: argb))
+        }
+    }
+
+    private func dynamicInvoiceStatusItems() -> [InvoiceStatusItem] {
+        let cached = boardConfigCache.getOptions("InvoiceStatus")
+        if cached.isEmpty { return Self.invoiceStatusOptions }
+        let fallbackByValue = Dictionary(uniqueKeysWithValues: Self.invoiceStatusOptions.map { ($0.id, $0) })
+        return cached.map { opt in
+            let argb = BoardConfigCache.parseHexColor(opt.color)
+                ?? Self.argbFromColor(fallbackByValue[opt.value]?.color ?? Color(hex: "#C4C4C4"))
+            return InvoiceStatusItem(id: opt.value, name: opt.displayName, color: Color(argb: argb))
+        }
+    }
+
+    private func dynamicHsFormStatusItems() -> [HSFormStatusItem] {
+        let cached = boardConfigCache.getOptions("HSRequired")
+        if cached.isEmpty { return Self.hsFormStatusOptions }
+        let fallbackByValue = Dictionary(uniqueKeysWithValues: Self.hsFormStatusOptions.map { ($0.id, $0) })
+        return cached.map { opt in
+            let argb = BoardConfigCache.parseHexColor(opt.color)
+                ?? Self.argbFromColor(fallbackByValue[opt.value]?.color ?? Color(hex: "#C4C4C4"))
+            return HSFormStatusItem(id: opt.value, name: opt.displayName, color: Color(argb: argb))
+        }
+    }
+
+    private func dynamicSubItemStatusItems() -> [SubItemStatusItem] {
+        let cached = boardConfigCache.getOptions("SubItemStatus")
+        if cached.isEmpty { return Self.subItemStatusOpts }
+        let fallbackByValue = Dictionary(uniqueKeysWithValues: Self.subItemStatusOpts.map { ($0.id, $0) })
+        return cached.map { opt in
+            let argb = BoardConfigCache.parseHexColor(opt.color)
+                ?? Self.argbFromColor(fallbackByValue[opt.value]?.color ?? Color(hex: "#C4C4C4"))
+            return SubItemStatusItem(id: opt.value, name: opt.displayName, color: Color(argb: argb))
+        }
+    }
+
+    private var isFirstAppear = true
 
     func loadInitialData() {
         guard !hasLoaded else { return }
@@ -222,11 +285,64 @@ class DayDetailViewModel {
         }
     }
 
+    /// Called from the screen's onAppear. First call performs a normal load
+    /// (with error toasts); subsequent calls silently refresh and swallow
+    /// JSON-parse / 404 errors so the user is never bounced when returning
+    /// from a deleted shift. Mirrors Android's refreshOnResume + silentRefresh.
     func refreshData() {
-        Task { @MainActor in
-            await loadClients()
-            await loadShifts()
+        if isFirstAppear {
+            isFirstAppear = false
+            Task { @MainActor in
+                await loadClients()
+                await loadShifts()
+            }
+        } else {
+            Task { @MainActor in
+                await silentRefresh()
+            }
         }
+    }
+
+    /// Silent reload: never sets isLoading or errorMessage. Errors are logged
+    /// and swallowed; the screen keeps showing whatever was already there.
+    private func silentRefresh() async {
+        let shifts: [ShiftDto]
+        if let shiftIdParam = shiftIdParam {
+            switch await shiftRepository.getShiftById(id: shiftIdParam) {
+            case .success(let data): shifts = [data]
+            default:
+                // Job was deleted or fetch failed — show empty state on a
+                // single-job view, but never an error toast.
+                shifts = []
+            }
+        } else {
+            let result: ApiResult<[ShiftDto]>
+            if isAdmin {
+                result = await shiftRepository.getShiftsByDate(selectedDate: dateStr)
+            } else {
+                result = await shiftRepository.getShiftsByUserIdAndDate(
+                    userId: preferencesManager.userId, selectedDate: dateStr
+                )
+            }
+            switch result {
+            case .success(let data): shifts = data.sorted { $0.id > $1.id }
+            default:
+                // Keep showing whatever is already on screen.
+                return
+            }
+        }
+        originalShifts = shifts
+        let rows = await processShifts(shifts)
+        allShiftRows = rows
+        let countText: String
+        switch rows.count {
+        case 0: countText = "No jobs scheduled"
+        case 1: countText = "1 job scheduled"
+        default: countText = "\(rows.count) jobs scheduled"
+        }
+        shiftRows = rows
+        projectCountText = countText
+        filterStatusText = "Showing \(rows.count) of \(originalShifts.count) projects"
     }
 
     private static func todayString() -> String {
@@ -318,19 +434,20 @@ class DayDetailViewModel {
             rows.append(ShiftDisplayRow(
                 shift: shift,
                 subItems: subItems,
-                statusMessage: Self.getStatusMessage(statusId: shift.statusId, hasQuotations: hasQuotations),
-                statusColor: CalendarViewModel.getStatusColor(shift.statusId, hasQuotations: hasQuotations),
-                contractTypeText: Self.getContractTypeText(shift.contractType),
-                contractTypeColor: CalendarViewModel.getContractTypeColor(shift.contractType),
-                invoiceStatusText: Self.getInvoiceStatusText(shift.invoiceStatus),
-                invoiceStatusColor: Self.getInvoiceStatusColor(shift.invoiceStatus),
-                hsFormText: Self.getHSFormText(shift.hsForms),
-                hsFormColor: Self.getHSFormColor(shift.hsForms),
+                statusMessage: statusMessageDynamic(shift.statusId, hasQuotations: hasQuotations),
+                statusColor: statusColorDynamic(shift.statusId, hasQuotations: hasQuotations),
+                contractTypeText: contractTypeTextDynamic(shift.contractType),
+                contractTypeColor: contractTypeColorDynamic(shift.contractType),
+                invoiceStatusText: invoiceStatusTextDynamic(shift.invoiceStatus),
+                invoiceStatusColor: invoiceStatusColorDynamic(shift.invoiceStatus),
+                hsFormText: hsFormTextDynamic(shift.hsForms),
+                hsFormColor: hsFormColorDynamic(shift.hsForms),
                 durationFromFormatted: Self.formatDateTime(shift.durationFrom),
                 durationToFormatted: Self.formatDateTime(shift.durationTo),
                 hasSubItems: !subItems.isEmpty,
                 hasQuotations: hasQuotations,
-                isAddSubItem: isOwner,
+                // Employees can add subitems but not delete them.
+                isAddSubItem: isOwner || isEmployee,
                 isDeleteSubItem: isOwner
             ))
         }
@@ -385,6 +502,7 @@ class DayDetailViewModel {
         case "FinalMeasure": return row.shift.finalMeasure
         case "Instructions": return row.shift.instructions
         case "Amount": return String(format: "%015.2f", row.shift.amount ?? 0.0)
+        case "ActualInvoiceAmount": return String(format: "%015.2f", row.shift.actualInvoiceAmount ?? 0.0)
         case "AcceptedQuoteAmount": return String(format: "%015.2f", row.shift.acceptedQuoteAmount ?? 0.0)
         case "StatusMessage": return row.statusMessage
         default: return ""
@@ -602,22 +720,78 @@ class DayDetailViewModel {
         editingShiftId = shiftId
     }
 
+    // Open the editor for Actual Invoice Amount. Admin/Manager (isOwner) only.
+    func editActualInvoice(_ shiftId: Int) {
+        guard isOwner, let shift = findShift(shiftId) else { return }
+        let current = shift.actualInvoiceAmount.map { String(format: "%.2f", $0) } ?? ""
+        activeDialog = .editor
+        editingShiftId = shiftId
+        editorTitle = "Actual Invoice Amount"
+        editorText = current
+        editorFieldName = "ActualInvoiceAmount"
+    }
+
     func openSubItemHS(_ shiftId: Int, _ subItemId: Int) {
-        guard !isCaregiver else { return }
+        // Employees can edit subitem fields; plain caregivers cannot.
+        guard !(isCaregiver && !isEmployee) else { return }
         activeDialog = .subItemHS
         editingShiftId = shiftId
         editingSubItemId = subItemId
     }
 
     func openSubItemStatus(_ shiftId: Int, _ subItemId: Int) {
-        guard !isCaregiver else { return }
+        guard !(isCaregiver && !isEmployee) else { return }
         activeDialog = .subItemStatus
         editingShiftId = shiftId
         editingSubItemId = subItemId
     }
 
+    func openSubItemJobCategory(_ shiftId: Int, _ subItemId: Int) {
+        guard !(isCaregiver && !isEmployee) else { return }
+        activeDialog = .subItemCategory
+        editingShiftId = shiftId
+        editingSubItemId = subItemId
+    }
+
+    func selectSubItemJobCategory(_ value: Int) {
+        guard let subItem = findSubItem(editingShiftId, editingSubItemId) else { return }
+        var updated = subItem
+        updated.jobCategory = value
+        dismissDialog()
+        updateSubItem(editingShiftId, updated)
+    }
+
+    // Cache-aware Job Category text/colour. Falls back to defaults.
+    func jobCategoryTextDynamic(_ value: Int) -> String {
+        boardConfigCache.displayName("JobCategory", value: value,
+                                     fallback: value == 2 ? "Secondary" : "Primary")
+    }
+
+    func jobCategoryColorDynamic(_ value: Int) -> Color {
+        let argb = boardConfigCache.color(
+            "JobCategory", value: value,
+            fallback: Self.argbFromColor(value == 2 ? Color(hex: "#9E9E9E") : Color(hex: "#1976D2"))
+        )
+        return Color(argb: argb)
+    }
+
+    func dynamicJobCategoryItems() -> [SubItemStatusItem] {
+        let cached = boardConfigCache.getOptions("JobCategory")
+        if cached.isEmpty {
+            return [
+                SubItemStatusItem(id: 1, name: "Primary", color: Color(hex: "#1976D2")),
+                SubItemStatusItem(id: 2, name: "Secondary", color: Color(hex: "#9E9E9E"))
+            ]
+        }
+        return cached.map { opt in
+            let argb = BoardConfigCache.parseHexColor(opt.color)
+                ?? Self.argbFromColor(opt.value == 2 ? Color(hex: "#9E9E9E") : Color(hex: "#1976D2"))
+            return SubItemStatusItem(id: opt.value, name: opt.displayName, color: Color(argb: argb))
+        }
+    }
+
     func openSubItemDateStarted(_ shiftId: Int, _ subItemId: Int) {
-        guard !isCaregiver, let subItem = findSubItem(shiftId, subItemId) else { return }
+        guard !(isCaregiver && !isEmployee), let subItem = findSubItem(shiftId, subItemId) else { return }
         let (date, time): (Date, Date)
         if let ds = subItem.dateStarted, !ds.isEmpty {
             (date, time) = parseDateTimeParts(ds)
@@ -653,6 +827,12 @@ class DayDetailViewModel {
         case "ProjectName": shift.projectName = text
         case "FinalMeasure": shift.finalMeasure = text
         case "Instructions": shift.instructions = text
+        case "ActualInvoiceAmount":
+            guard isOwner else { return }
+            let cleaned = text.trimmingCharacters(in: .whitespaces)
+                .replacingOccurrences(of: "$", with: "")
+                .replacingOccurrences(of: ",", with: "")
+            shift.actualInvoiceAmount = Double(cleaned)
         default: break
         }
         dismissDialog()
@@ -999,6 +1179,62 @@ class DayDetailViewModel {
             }
         }
         return (datePart, timePart)
+    }
+
+    // MARK: - Cache-Aware Instance Helpers (read live from BoardConfigCache; fall back to statics)
+
+    func statusMessageDynamic(_ statusId: Int, hasQuotations: Bool = false) -> String {
+        boardConfigCache.displayName("ShiftStatus", value: statusId,
+                                     fallback: Self.getStatusMessage(statusId: statusId, hasQuotations: hasQuotations))
+    }
+
+    func statusColorDynamic(_ statusId: Int, hasQuotations: Bool = false) -> Color {
+        let argb = boardConfigCache.color("ShiftStatus", value: statusId,
+                                          fallback: Self.argbFromColor(CalendarViewModel.getStatusColor(statusId, hasQuotations: hasQuotations)))
+        return Color(argb: argb)
+    }
+
+    func contractTypeTextDynamic(_ value: Int?) -> String {
+        boardConfigCache.displayName("ContractType", value: value ?? -1,
+                                     fallback: Self.getContractTypeText(value))
+    }
+
+    func contractTypeColorDynamic(_ value: Int?) -> Color {
+        let argb = boardConfigCache.color("ContractType", value: value ?? -1,
+                                          fallback: Self.argbFromColor(CalendarViewModel.getContractTypeColor(value)))
+        return Color(argb: argb)
+    }
+
+    func invoiceStatusTextDynamic(_ value: Int?) -> String {
+        boardConfigCache.displayName("InvoiceStatus", value: value ?? -1,
+                                     fallback: Self.getInvoiceStatusText(value))
+    }
+
+    func invoiceStatusColorDynamic(_ value: Int?) -> Color {
+        let argb = boardConfigCache.color("InvoiceStatus", value: value ?? -1,
+                                          fallback: Self.argbFromColor(Self.getInvoiceStatusColor(value)))
+        return Color(argb: argb)
+    }
+
+    func hsFormTextDynamic(_ value: Int?) -> String {
+        boardConfigCache.displayName("HSRequired", value: value ?? -1,
+                                     fallback: Self.getHSFormText(value))
+    }
+
+    func hsFormColorDynamic(_ value: Int?) -> Color {
+        let argb = boardConfigCache.color("HSRequired", value: value ?? -1,
+                                          fallback: Self.argbFromColor(Self.getHSFormColor(value)))
+        return Color(argb: argb)
+    }
+
+    static func argbFromColor(_ c: Color) -> UInt32 {
+        let ui = UIColor(c)
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        ui.getRed(&r, green: &g, blue: &b, alpha: &a)
+        return (UInt32((a * 255).rounded()) & 0xFF) << 24
+            | (UInt32((r * 255).rounded()) & 0xFF) << 16
+            | (UInt32((g * 255).rounded()) & 0xFF) << 8
+            |  UInt32((b * 255).rounded()) & 0xFF
     }
 
     // MARK: - Static Helpers

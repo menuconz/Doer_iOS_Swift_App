@@ -65,4 +65,8 @@ enum Route: Hashable {
     case liveTracking
     case timeTracking
     case navigationMap(siteLatitude: Double, siteLongitude: Double, siteAddress: String, projectName: String, shiftId: Int)
+
+    // Board / Activity
+    case boardSettings
+    case activityLog
 }

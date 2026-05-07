@@ -20,6 +20,7 @@ class ShiftRepository {
     func getMonthlyJobsByUserId(userId: String, month: Int?, year: Int?, skip: Int = 0, take: Int = 100) async -> ApiResult<[ShiftDto]> { await safeApiCall { try await self.shiftApi.getMonthlyJobsByUserId(userId: userId, month: month, year: year, skip: skip, take: take) } }
     func getMonthlyJobsByCaregiverId(caregiverId: String, month: Int?, year: Int?, skip: Int = 0, take: Int = 100) async -> ApiResult<[ShiftDto]> { await safeApiCall { try await self.shiftApi.getMonthlyJobsByCaregiverId(caregiverId: caregiverId, month: month, year: year, skip: skip, take: take) } }
     func getMonthlyJobsByAdmin(month: Int?, year: Int?, skip: Int = 0, take: Int = 100) async -> ApiResult<[ShiftDto]> { await safeApiCall { try await self.shiftApi.getMonthlyJobsByAdmin(month: month, year: year, skip: skip, take: take) } }
+    func getJobsByDateRange(userId: String, startDate: String, endDate: String) async -> ApiResult<[ShiftDto]> { await safeApiCall { try await self.shiftApi.getJobsByDateRange(userId: userId, startDate: startDate, endDate: endDate) } }
     func getShiftById(id: Int) async -> ApiResult<ShiftDto> { await safeApiCall { try await self.shiftApi.getShiftById(id: id) } }
 
     func createShift(shiftDetail: ShiftDto) async -> ApiResult<ShiftDto> { await safeApiCall { try await self.shiftApi.createShift(shiftDetail: shiftDetail) } }

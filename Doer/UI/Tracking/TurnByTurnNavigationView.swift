@@ -71,8 +71,15 @@ class TurnByTurnNavigationViewController: UIViewController, GMSNavigatorListener
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         let status = manager.authorizationStatus
-        if status == .authorizedWhenInUse || status == .authorizedAlways {
+        switch status {
+        case .authorizedWhenInUse, .authorizedAlways:
             manager.startUpdatingLocation()
+        case .denied, .restricted:
+            showError("Location permission denied. Enable it in Settings → Privacy → Location Services to use navigation.")
+        case .notDetermined:
+            break
+        @unknown default:
+            break
         }
     }
 
@@ -97,8 +104,17 @@ class TurnByTurnNavigationViewController: UIViewController, GMSNavigatorListener
 
     private func initializeNavigation() {
         guard let navigator = mapView.navigator else {
-            print("Navigator not available")
-            showError("Navigator not available. Please accept Terms & Conditions and try again.")
+            // Navigator is nil when the Google Navigation T&C dialog hasn't been accepted yet.
+            // Show it now and retry once on acceptance instead of failing outright.
+            print("Navigator unavailable — prompting Navigation T&C")
+            GMSNavigationServices.showTermsAndConditionsDialogIfNeeded(withCompanyName: "Doer") { [weak self] accepted in
+                guard let self = self else { return }
+                if accepted, self.mapView.navigator != nil {
+                    self.initializeNavigation()
+                } else {
+                    self.showError("Navigation requires accepting the Terms & Conditions.")
+                }
+            }
             return
         }
         self.navigator = navigator

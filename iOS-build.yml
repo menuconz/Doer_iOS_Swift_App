@@ -1,0 +1,113 @@
+parameters:
+- name: env
+  type: string
+  default: ""
+- name: applicationId
+  type: string
+  default: ""
+- name: versionNumber
+  type: string
+  default: ""
+- name: BuildConfiguration
+  type: string
+  default: "Release"
+- name: buildNumber
+  type: string
+  default: ""
+
+steps:
+  - script: |
+      sudo xcode-select -s /Applications/Xcode_26.2.app
+      xcodebuild -version
+    displayName: 'Select Xcode Version'
+    
+  - task: InstallAppleCertificate@2
+    inputs:
+      certSecureFile: 'DistributionCertificate.p12'
+      certPwd: 'pawa1@N#'
+      keychain: 'temp'
+    displayName: 'Install Apple Certificate'
+    
+  - task: InstallAppleProvisioningProfile@1
+    inputs:
+      provisioningProfileLocation: 'secureFiles'
+      provProfileSecureFile: 'DoerApp_Distribution_2026_May.mobileprovision'
+    displayName: 'Install Provisioning Profile'
+
+  # Stamp version
+  - script: |
+      xcrun agvtool new-marketing-version ${{ parameters.versionNumber }}
+      xcrun agvtool new-version -all $(Build.BuildId)
+    displayName: 'Set Version via Xcode'
+
+  - script: |
+      security find-identity -v -p codesigning
+    displayName: 'List Available Code Signing Identities'
+    
+  - script: |
+      xcodebuild -showsdks | grep iphoneos26.2 \
+      || { echo "❌ iOS 26 SDK missing"; exit 1; }
+    displayName: 'Verify iOS 26 SDK'
+
+  - script: |
+      xcodebuild -list -project Doer.xcodeproj
+    displayName: 'Verify schemes'
+
+  - script: |
+      /Applications/Xcode_26.2.app/Contents/Developer/usr/bin/xcodebuild -showsdks
+    displayName: 'List installed SDKs'
+
+  - script: |
+      xcodebuild -showsdks | grep iphoneos26.2
+    displayName: 'Assert iOS 26 SDK exists'
+    
+  # Archive app
+  - task: CmdLine@2
+    displayName: 'Archive iOS App'
+    inputs:
+      script: |
+        /Applications/Xcode_26.2.app/Contents/Developer/usr/bin/xcodebuild clean archive \
+        -project Doer.xcodeproj \
+        -scheme Doer \
+        -sdk iphoneos26.2 \
+        -destination "generic/platform=iOS" \
+        -configuration Release \
+        -archivePath "$(Build.ArtifactStagingDirectory)/Doer.xcarchive"
+
+  # Create the exportOptions.plist file dynamically
+  - script: |
+      cat <<EOF > exportOptions.plist
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+      <dict>
+          <key>method</key>
+          <string>app-store</string>
+          <key>teamID</key>
+          <string>7JKF784S57</string>
+          <key>signingStyle</key>
+          <string>manual</string>
+          <key>provisioningProfiles</key>
+          <dict>
+              <key>nz.co.doer</key>
+              <string>DoerApp_Distribution_2026_May</string>
+          </dict>
+      </dict>
+      </plist>
+      EOF
+    displayName: 'Create exportOptions.plist'
+  # Export IPA
+  - script: |
+      /Applications/Xcode_26.0.1.app/Contents/Developer/usr/bin/xcodebuild -exportArchive \
+        -archivePath "$(Build.ArtifactStagingDirectory)/Doer.xcarchive" \
+        -exportPath "$(Build.ArtifactStagingDirectory)/export" \
+        -exportOptionsPlist exportOptions.plist
+    displayName: 'Export IPA'
+
+  # Publish artifact
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish IPA Artifact'
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)/export'
+      ArtifactName: 'Doer_IPA'
+      publishLocation: 'Container'

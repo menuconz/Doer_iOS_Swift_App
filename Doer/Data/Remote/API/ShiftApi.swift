@@ -63,6 +63,14 @@ class ShiftApi {
         return try await network.get("Shift/GetMonthlyJobsByAdmin", parameters: params)
     }
 
+    // Date-based Kanban (Yesterday / Today / Next 5 Days). Returns shifts whose subitems
+    // (or the shift itself) fall in [startDate, endDate].
+    func getJobsByDateRange(userId: String, startDate: String, endDate: String) async throws -> [ShiftDto] {
+        return try await network.get("Shift/GetJobsByDateRange", parameters: [
+            "userId": userId, "startDate": startDate, "endDate": endDate
+        ])
+    }
+
     func getShiftById(id: Int) async throws -> ShiftDto {
         return try await network.get("Shift/GetShiftById", parameters: ["Id": id])
     }

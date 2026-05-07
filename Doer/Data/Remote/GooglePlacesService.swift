@@ -48,11 +48,17 @@ struct GooglePlace {
 class GooglePlacesService {
     static let shared = GooglePlacesService()
 
+    // Resolves MAPS_API_KEY from Info.plist; falls back to the SDK key from
+    // DoerApp.swift if the build setting wasn't substituted (the literal
+    // "$(MAPS_API_KEY)" leaks through and Google rejects the request).
     private let apiKey: String = {
-        if let key = Bundle.main.object(forInfoDictionaryKey: "MAPS_API_KEY") as? String {
-            return key
+        let fallback = "AIzaSyDCmj86d3XA-GvAonJowP1ujnzCf7TDKAE"
+        guard let key = Bundle.main.object(forInfoDictionaryKey: "MAPS_API_KEY") as? String,
+              !key.isEmpty,
+              !key.hasPrefix("$(") else {
+            return fallback
         }
-        return ""
+        return key
     }()
 
     private let baseUrl = "https://maps.googleapis.com/maps/api/place"
@@ -67,8 +73,15 @@ class GooglePlacesService {
             let (data, _) = try await URLSession.shared.data(from: url)
             let decoder = JSONDecoder()
             let result = try decoder.decode(PlaceAutoCompleteResponse.self, from: data)
+            if result.status != "OK" && result.status != "ZERO_RESULTS" {
+                let body = String(data: data, encoding: .utf8) ?? ""
+                print("GooglePlacesService autocomplete failed: status=\(result.status) body=\(body)")
+            }
             return result.predictions
         } catch {
+            if (error as NSError).code != NSURLErrorCancelled {
+                print("GooglePlacesService autocomplete error: \(error)")
+            }
             return []
         }
     }
@@ -82,12 +95,20 @@ class GooglePlacesService {
             let (data, _) = try await URLSession.shared.data(from: url)
             let decoder = JSONDecoder()
             let result = try decoder.decode(PlaceDetailsResponse.self, from: data)
+            if result.status != "OK" {
+                let body = String(data: data, encoding: .utf8) ?? ""
+                print("GooglePlacesService details failed: status=\(result.status) body=\(body)")
+                return nil
+            }
             return GooglePlace(
                 address: result.result.formattedAddress,
                 latitude: result.result.geometry.location.lat,
                 longitude: result.result.geometry.location.lng
             )
         } catch {
+            if (error as NSError).code != NSURLErrorCancelled {
+                print("GooglePlacesService details error: \(error)")
+            }
             return nil
         }
     }

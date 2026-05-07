@@ -72,7 +72,7 @@ struct NewLeadsScreen: View {
                                             EditableCellView(text: lead.ownerName, width: colOwner) {
                                                 viewModel.startEdit(lead, .owner)
                                             }
-                                            SolidColorCellView(text: lead.statusName, width: colStatus, bgColor: NewLeadsViewModel.getLeadStatusColor(lead.statusId)) {
+                                            SolidColorCellView(text: lead.statusName, width: colStatus, bgColor: viewModel.leadStatusColor(lead.statusId)) {
                                                 viewModel.startEdit(lead, .status)
                                             }
                                             EditableCellView(text: lead.costFromQuote != nil ? "\(lead.costFromQuote!)" : "", width: colCost) {
@@ -84,7 +84,7 @@ struct NewLeadsScreen: View {
                                             EditableCellView(text: lead.location, width: colLocation) {
                                                 viewModel.startEdit(lead, .location)
                                             }
-                                            SolidColorCellView(text: lead.contractTypeName, width: colContractType, bgColor: NewLeadsViewModel.getContractTypeColor(lead.contractType)) {
+                                            SolidColorCellView(text: lead.contractTypeName, width: colContractType, bgColor: viewModel.contractTypeColorDynamic(lead.contractType)) {
                                                 viewModel.startEdit(lead, .contractType)
                                             }
                                             DataCellView(text: viewModel.formatDate(lead.createdDate), width: colCreatedDate)
@@ -200,12 +200,14 @@ struct NewLeadsScreen: View {
                 StatusBottomSheetView(
                     statuses: NewLeadsViewModel.leadStatuses,
                     onSelect: { viewModel.selectLeadStatus($0) },
-                    onDismiss: { viewModel.cancelEdit() }
+                    onDismiss: { viewModel.cancelEdit() },
+                    colorProvider: { viewModel.leadStatusColor($0) }
                 )
             case .contractType:
                 ContractTypeBottomSheetView(
                     onSelect: { viewModel.selectContractType($0) },
-                    onDismiss: { viewModel.cancelEdit() }
+                    onDismiss: { viewModel.cancelEdit() },
+                    colorProvider: { viewModel.contractTypeColorDynamic($0) }
                 )
             case .client:
                 ClientBottomSheetView(
@@ -392,6 +394,7 @@ struct StatusBottomSheetView: View {
     let statuses: [(Int, String)]
     let onSelect: (Int) -> Void
     let onDismiss: () -> Void
+    var colorProvider: (Int) -> Color = { NewLeadsViewModel.getLeadStatusColor($0) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -417,7 +420,7 @@ struct StatusBottomSheetView: View {
                                 .frame(maxWidth: .infinity)
                                 .padding(10)
                         }
-                        .background(NewLeadsViewModel.getLeadStatusColor(id))
+                        .background(colorProvider(id))
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                 }
@@ -433,6 +436,7 @@ struct StatusBottomSheetView: View {
 struct ContractTypeBottomSheetView: View {
     let onSelect: (Int) -> Void
     let onDismiss: () -> Void
+    var colorProvider: (Int) -> Color = { NewLeadsViewModel.getContractTypeColor($0) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -458,7 +462,7 @@ struct ContractTypeBottomSheetView: View {
                                 .frame(maxWidth: .infinity)
                                 .padding(10)
                         }
-                        .background(NewLeadsViewModel.getContractTypeColor(id))
+                        .background(colorProvider(id))
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                 }

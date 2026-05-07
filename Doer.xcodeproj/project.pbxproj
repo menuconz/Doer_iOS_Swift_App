@@ -150,6 +150,17 @@
 		FB0682E2E8D74B6291B6E3CB /* LogsRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46E4A47F59870971CEDB168 /* LogsRepository.swift */; };
 		FB5D232DD96D0264402B8A36 /* AccountRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69FBEB48F1DAF5648004B905 /* AccountRepository.swift */; };
 		FF2568CC59229238832DEB45 /* ShiftRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0B9E6A61CCD7F15B6F9BD6 /* ShiftRepository.swift */; };
+		B0A1B000000000000B001001 /* BoardApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A001001 /* BoardApi.swift */; };
+		B0A1B000000000000B001002 /* ActivityLogApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A001002 /* ActivityLogApi.swift */; };
+		B0A1B000000000000B001003 /* BoardRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A001003 /* BoardRepository.swift */; };
+		B0A1B000000000000B001004 /* ActivityLogRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A001004 /* ActivityLogRepository.swift */; };
+		B0A1B000000000000B001005 /* BoardConfigCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A001005 /* BoardConfigCache.swift */; };
+		B0A1B000000000000B001006 /* ActivityLogDto.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A001006 /* ActivityLogDto.swift */; };
+		B0A1B000000000000B001007 /* BoardDto.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A001007 /* BoardDto.swift */; };
+		B0A1B000000000000B001008 /* ActivityLogScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A001008 /* ActivityLogScreen.swift */; };
+		B0A1B000000000000B001009 /* ActivityLogViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A001009 /* ActivityLogViewModel.swift */; };
+		B0A1B000000000000B00100A /* BoardSettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A00100A /* BoardSettingsScreen.swift */; };
+		B0A1B000000000000B00100B /* BoardSettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1D000000000000A00100B /* BoardSettingsViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -293,6 +304,17 @@
 		FE3B0E270213C86971F6239D /* SendFeedbackViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendFeedbackViewModel.swift; sourceTree = "<group>"; };
 		FF2A3B4C5D6E7F8A9B0C1D2E /* TrackingManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackingManager.swift; sourceTree = "<group>"; };
 		FF6A7B8C9D0E1F2A3B4C5D6E /* TimeTrackingApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeTrackingApi.swift; sourceTree = "<group>"; };
+		B0A1D000000000000A001001 /* BoardApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardApi.swift; sourceTree = "<group>"; };
+		B0A1D000000000000A001002 /* ActivityLogApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityLogApi.swift; sourceTree = "<group>"; };
+		B0A1D000000000000A001003 /* BoardRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardRepository.swift; sourceTree = "<group>"; };
+		B0A1D000000000000A001004 /* ActivityLogRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityLogRepository.swift; sourceTree = "<group>"; };
+		B0A1D000000000000A001005 /* BoardConfigCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardConfigCache.swift; sourceTree = "<group>"; };
+		B0A1D000000000000A001006 /* ActivityLogDto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityLogDto.swift; sourceTree = "<group>"; };
+		B0A1D000000000000A001007 /* BoardDto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardDto.swift; sourceTree = "<group>"; };
+		B0A1D000000000000A001008 /* ActivityLogScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityLogScreen.swift; sourceTree = "<group>"; };
+		B0A1D000000000000A001009 /* ActivityLogViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityLogViewModel.swift; sourceTree = "<group>"; };
+		B0A1D000000000000A00100A /* BoardSettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardSettingsScreen.swift; sourceTree = "<group>"; };
+		B0A1D000000000000A00100B /* BoardSettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardSettingsViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -338,7 +360,9 @@
 		1060A4E7BB6B0AE5350117C7 /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				B0A1G000000000000G001001 /* ActivityLog */,
 				39942ED30FB0B81EDEDF23EB /* Auth */,
+				B0A1G000000000000G001002 /* BoardSettings */,
 				E152C1CF1997D181B1D1BB55 /* Calendar */,
 				971826198A924F593D01534C /* Clients */,
 				0519EC65F80D022A5114216C /* Contractors */,
@@ -357,6 +381,24 @@
 				DA1B2C3D4E5F6A7B8C9D0E1F /* Tracking */,
 			);
 			path = UI;
+			sourceTree = "<group>";
+		};
+		B0A1G000000000000G001001 /* ActivityLog */ = {
+			isa = PBXGroup;
+			children = (
+				B0A1D000000000000A001008 /* ActivityLogScreen.swift */,
+				B0A1D000000000000A001009 /* ActivityLogViewModel.swift */,
+			);
+			path = ActivityLog;
+			sourceTree = "<group>";
+		};
+		B0A1G000000000000G001002 /* BoardSettings */ = {
+			isa = PBXGroup;
+			children = (
+				B0A1D000000000000A00100A /* BoardSettingsScreen.swift */,
+				B0A1D000000000000A00100B /* BoardSettingsViewModel.swift */,
+			);
+			path = BoardSettings;
 			sourceTree = "<group>";
 		};
 		163BE829F4ADEFE8A1985E11 /* Messages */ = {
@@ -455,6 +497,7 @@
 		590FE42E09F27B3DB1C3AB0E /* Local */ = {
 			isa = PBXGroup;
 			children = (
+				B0A1D000000000000A001005 /* BoardConfigCache.swift */,
 				D22D789C1953DADBB86BCBC7 /* PreferencesManager.swift */,
 				C6FBFBB01902B7CC99F36163 /* SecureStorageManager.swift */,
 			);
@@ -490,6 +533,8 @@
 		7553391350AD4033F7289466 /* DTO */ = {
 			isa = PBXGroup;
 			children = (
+				B0A1D000000000000A001006 /* ActivityLogDto.swift */,
+				B0A1D000000000000A001007 /* BoardDto.swift */,
 				2260F7A0BD1E86375C9B26EA /* ChatMessageDto.swift */,
 				F5229A33645EE1AB377FD08E /* ClientDto.swift */,
 				4084C0DDE9B7985C5E7B62C4 /* EmailDto.swift */,
@@ -511,6 +556,8 @@
 			isa = PBXGroup;
 			children = (
 				69FBEB48F1DAF5648004B905 /* AccountRepository.swift */,
+				B0A1D000000000000A001004 /* ActivityLogRepository.swift */,
+				B0A1D000000000000A001003 /* BoardRepository.swift */,
 				5585D733461CDA3A2F7EB4F5 /* CaregiverLevelRepository.swift */,
 				02C9703E41862FA6B7F36879 /* ChatMessageRepository.swift */,
 				D23C9104AF07AF50FADCDA5E /* ClientRepository.swift */,
@@ -530,6 +577,8 @@
 			isa = PBXGroup;
 			children = (
 				BD85A836BC8FD34ABC9771ED /* AccountApi.swift */,
+				B0A1D000000000000A001002 /* ActivityLogApi.swift */,
+				B0A1D000000000000A001001 /* BoardApi.swift */,
 				EBE42DE4A5FAEC89F2980071 /* CaregiverLevelApi.swift */,
 				5CD9495DB93BD178E68774FD /* ChatMessageApi.swift */,
 				9C27588B6ED7DC97328897BE /* ClientApi.swift */,
@@ -911,6 +960,17 @@
 				CD0E1F2A5B6C7D8E9F0A1B2C /* NavigationMapScreen.swift in Sources */,
 				CE1F2A3B6C7D8E9F0A1B2C3D /* NavigationMapViewModel.swift in Sources */,
 				CF2A3B4C7D8E9F0A1B2C3D4E /* OfflineSyncManager.swift in Sources */,
+				B0A1B000000000000B001001 /* BoardApi.swift in Sources */,
+				B0A1B000000000000B001002 /* ActivityLogApi.swift in Sources */,
+				B0A1B000000000000B001003 /* BoardRepository.swift in Sources */,
+				B0A1B000000000000B001004 /* ActivityLogRepository.swift in Sources */,
+				B0A1B000000000000B001005 /* BoardConfigCache.swift in Sources */,
+				B0A1B000000000000B001006 /* ActivityLogDto.swift in Sources */,
+				B0A1B000000000000B001007 /* BoardDto.swift in Sources */,
+				B0A1B000000000000B001008 /* ActivityLogScreen.swift in Sources */,
+				B0A1B000000000000B001009 /* ActivityLogViewModel.swift in Sources */,
+				B0A1B000000000000B00100A /* BoardSettingsScreen.swift in Sources */,
+				B0A1B000000000000B00100B /* BoardSettingsViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -923,7 +983,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Doer/Doer.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 501;
+				CURRENT_PROJECT_VERSION = 502;
 				DEVELOPMENT_TEAM = 7JKF784S57;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Doer/Info.plist;
@@ -931,7 +991,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0;
+				MARKETING_VERSION = 2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = nz.co.doer;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -944,7 +1004,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Doer/Doer.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 501;
+				CURRENT_PROJECT_VERSION = 502;
 				DEVELOPMENT_TEAM = 7JKF784S57;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Doer/Info.plist;
@@ -952,7 +1012,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0;
+				MARKETING_VERSION = 2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = nz.co.doer;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";

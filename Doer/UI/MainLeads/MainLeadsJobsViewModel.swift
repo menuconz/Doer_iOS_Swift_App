@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import UIKit
 
 // MARK: - Data Models
 
@@ -74,13 +75,34 @@ struct KanbanColumn: Identifiable {
     let title: String
     let headerColor: Color
     let items: [JobRowItem]
+    var sections: [KanbanSection] = []
+    var totalCount: Int = 0
+}
+
+// A single card in the date-based Kanban — represents one subitem.
+struct KanbanCard: Identifiable {
+    let id = UUID()
+    let subItem: ShiftSubItemDto
+    let parentShift: ShiftDto
+    let projectName: String
+    let displayDateTime: String
+    let hasUpdates: Bool
+    let statusColor: Color
+    let statusText: String
+}
+
+// Group of cards within a column (used for Today's Primary/Secondary split).
+struct KanbanSection: Identifiable {
+    let id = UUID()
+    let title: String?
+    let cards: [KanbanCard]
 }
 
 // Edit dialog types
 enum EditDialogType {
     case none, textEditor, dateTimePicker, contractTypePicker, invoiceStatusPicker,
-         hsFormStatusPicker, subItemHSPicker, subItemStatusPicker, clientPicker,
-         addressSearch, subItemDatePicker, deleteSubItem
+         hsFormStatusPicker, subItemHSPicker, subItemStatusPicker, subItemCategoryPicker,
+         clientPicker, addressSearch, subItemDatePicker, deleteSubItem
 }
 
 struct EditDialogState {
@@ -119,6 +141,7 @@ class MainLeadsJobsViewModel {
     // Role flags
     var isOwner: Bool = false
     var isCaregiver: Bool = false
+    var isEmployee: Bool = false
     // View mode
     var selectedViewMode: String = "Main Table"
     var isListView: Bool = true
@@ -150,18 +173,21 @@ class MainLeadsJobsViewModel {
     private let clientRepository: ClientRepository
     private let preferencesManager: PreferencesManager
     private let googlePlacesService: GooglePlacesService
+    private let boardConfigCache: BoardConfigCache
     private var hasLoaded = false
 
     init(
         shiftRepository: ShiftRepository = DIContainer.shared.shiftRepository,
         clientRepository: ClientRepository = DIContainer.shared.clientRepository,
         preferencesManager: PreferencesManager = PreferencesManager.shared,
-        googlePlacesService: GooglePlacesService = DIContainer.shared.googlePlacesService
+        googlePlacesService: GooglePlacesService = DIContainer.shared.googlePlacesService,
+        boardConfigCache: BoardConfigCache = DIContainer.shared.boardConfigCache
     ) {
         self.shiftRepository = shiftRepository
         self.clientRepository = clientRepository
         self.preferencesManager = preferencesManager
         self.googlePlacesService = googlePlacesService
+        self.boardConfigCache = boardConfigCache
 
         let now = Date()
         let calendar = Calendar.current
@@ -177,6 +203,83 @@ class MainLeadsJobsViewModel {
         hasLoaded = true
         loadClients()
         loadJobs()
+    }
+
+    // Called when the screen wants to pick up admin-renamed dropdown labels.
+    // Triggered by the screen observing boardConfigCache.version changes.
+    func reloadForCacheChange() {
+        guard !originalJobs.isEmpty else { return }
+        loadJobs()
+    }
+
+    // MARK: - Cache-aware label/colour helpers
+    // These read from BoardConfigCache when available, fall back to the static companion methods.
+
+    func statusText(_ statusId: Int, hasQuotations: Bool = false) -> String {
+        boardConfigCache.displayName("ShiftStatus", value: statusId,
+                                     fallback: Self.getStatusText(statusId, hasQuotations: hasQuotations))
+    }
+
+    func statusColor(_ statusId: Int, hasQuotations: Bool = false) -> Color {
+        let argb = boardConfigCache.color("ShiftStatus", value: statusId,
+                                          fallback: Self.colorToARGB(Self.getStatusColor(statusId, hasQuotations: hasQuotations)))
+        return Color(argb: argb)
+    }
+
+    func invoiceText(_ value: Int?) -> String {
+        boardConfigCache.displayName("InvoiceStatus", value: value ?? -1,
+                                     fallback: Self.getInvoiceText(value))
+    }
+
+    func invoiceColor(_ value: Int?) -> Color {
+        let argb = boardConfigCache.color("InvoiceStatus", value: value ?? -1,
+                                          fallback: Self.colorToARGB(Self.getInvoiceColor(value)))
+        return Color(argb: argb)
+    }
+
+    func contractTypeText(_ value: Int?) -> String {
+        boardConfigCache.displayName("ContractType", value: value ?? -1,
+                                     fallback: Self.getContractTypeText(value))
+    }
+
+    func contractTypeColor(_ value: Int?) -> Color {
+        let argb = boardConfigCache.color("ContractType", value: value ?? -1,
+                                          fallback: Self.colorToARGB(Self.getContractTypeColor(value)))
+        return Color(argb: argb)
+    }
+
+    func hsFormText(_ value: Int?) -> String {
+        boardConfigCache.displayName("HSRequired", value: value ?? -1,
+                                     fallback: Self.getHSFormText(value))
+    }
+
+    func hsFormColor(_ value: Int?) -> Color {
+        let argb = boardConfigCache.color("HSRequired", value: value ?? -1,
+                                          fallback: Self.colorToARGB(Self.getHSFormColor(value)))
+        return Color(argb: argb)
+    }
+
+    func subItemStatusText(_ value: Int) -> String {
+        boardConfigCache.displayName("SubItemStatus", value: value,
+                                     fallback: Self.getSubItemStatusText(value))
+    }
+
+    func subItemStatusColor(_ value: Int) -> Color {
+        let argb = boardConfigCache.color("SubItemStatus", value: value,
+                                          fallback: Self.colorToARGB(Self.getSubItemStatusColor(value)))
+        return Color(argb: argb)
+    }
+
+    // Convert SwiftUI Color to UInt32 ARGB. Best effort — uses cgColor.
+    static func colorToARGB(_ color: Color) -> UInt32 {
+        let ui = UIColor(color)
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        ui.getRed(&r, green: &g, blue: &b, alpha: &a)
+        let R = UInt32((r * 255).rounded()) & 0xFF
+        let G = UInt32((g * 255).rounded()) & 0xFF
+        let B = UInt32((b * 255).rounded()) & 0xFF
+        let A = UInt32((a * 255).rounded()) & 0xFF
+        return (A << 24) | (R << 16) | (G << 8) | B
     }
 
     func refreshData() {
@@ -227,8 +330,10 @@ class MainLeadsJobsViewModel {
             let isMgr = preferencesManager.isManager
             let isCg = preferencesManager.isCaregiver
             let isAdm = preferencesManager.isAdmin
+            let isEmp = preferencesManager.isEmployee
             let userId = preferencesManager.userId
             let owner = isMgr || isAdm
+            self.isEmployee = isEmp
 
             let result = await fetchPage(isAdmin: isAdm, isCaregiver: isCg, userId: userId, month: currentMonth, year: currentYear, skip: 0, take: pageSize)
 
@@ -306,6 +411,7 @@ class MainLeadsJobsViewModel {
     }
 
     private func mapShiftsToRows(_ shifts: [ShiftDto], isOwner: Bool) -> [JobRowItem] {
+        let canAddSubItem = isOwner || isEmployee
         return shifts.map { shift in
             let hasQuotations = !(shift.jobQuotations?.isEmpty ?? true) &&
                 shift.statusId == ShiftStatus.created.rawValue &&
@@ -333,7 +439,7 @@ class MainLeadsJobsViewModel {
                     return enriched
                 },
                 isOwner: isOwner,
-                isAddSubItem: isOwner
+                isAddSubItem: canAddSubItem
             )
         }
     }
@@ -379,6 +485,7 @@ class MainLeadsJobsViewModel {
             case "Instructions": cmp = a.shift.instructions.lowercased() < b.shift.instructions.lowercased()
             case "Amount": cmp = (a.shift.amount ?? 0) < (b.shift.amount ?? 0)
             case "AcceptedQuoteAmount": cmp = (a.shift.acceptedQuoteAmount ?? 0) < (b.shift.acceptedQuoteAmount ?? 0)
+            case "ActualInvoiceAmount": cmp = (a.shift.actualInvoiceAmount ?? 0) < (b.shift.actualInvoiceAmount ?? 0)
             case "StatusMessage": cmp = a.statusDisplayText.lowercased() < b.statusDisplayText.lowercased()
             default: cmp = a.shift.projectName.lowercased() < b.shift.projectName.lowercased()
             }
@@ -431,21 +538,131 @@ class MainLeadsJobsViewModel {
         }
     }
 
+    // Date-based Kanban: Yesterday / Today (Primary + Secondary) / Next 5 Days.
+    // Each card represents a single subitem.
     private func buildKanban() {
         guard !jobs.isEmpty else {
             kanbanColumns = []
             return
         }
-        let grouped = Dictionary(grouping: jobs) { $0.shift.contractType ?? 0 }
-        let columns = grouped.keys.sorted().compactMap { key -> KanbanColumn? in
-            guard let groupJobs = grouped[key], let first = groupJobs.first else { return nil }
-            return KanbanColumn(
-                title: "\(first.contractTypeDisplayText) / \(groupJobs.count)",
-                headerColor: first.contractTypeColor,
-                items: groupJobs
-            )
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        guard let yesterday = cal.date(byAdding: .day, value: -1, to: today),
+              let nextStart = cal.date(byAdding: .day, value: 1, to: today),
+              let nextEnd = cal.date(byAdding: .day, value: 5, to: today) else {
+            kanbanColumns = []
+            return
         }
-        kanbanColumns = columns
+
+        struct CardWithDate {
+            let card: KanbanCard
+            let date: Date
+        }
+
+        var cardsWithDates: [CardWithDate] = []
+        for row in jobs {
+            for sub in row.subItems {
+                guard let date = resolveSubItemDate(subItem: sub, shift: row.shift) else { continue }
+                let card = KanbanCard(
+                    subItem: sub,
+                    parentShift: row.shift,
+                    projectName: row.shift.projectName,
+                    displayDateTime: formatKanbanDateTime(subItemDate: sub.dateStarted, shiftStart: row.shift.shiftStartTime),
+                    hasUpdates: isRecentlyUpdated(sub.modifiedDate),
+                    statusColor: subItemStatusColor(sub.status),
+                    statusText: subItemStatusText(sub.status)
+                )
+                cardsWithDates.append(CardWithDate(card: card, date: cal.startOfDay(for: date)))
+            }
+        }
+
+        let yesterdayCards = cardsWithDates.filter { $0.date == yesterday }
+            .sorted { ($0.card.subItem.dateStarted ?? "") < ($1.card.subItem.dateStarted ?? "") }
+            .map { $0.card }
+
+        let todayCards = cardsWithDates.filter { $0.date == today }
+        let todayPrimary = todayCards.filter { $0.card.subItem.jobCategory == JobCategory.primary.rawValue }
+            .sorted { ($0.card.subItem.dateStarted ?? "") < ($1.card.subItem.dateStarted ?? "") }
+            .map { $0.card }
+        let todaySecondary = todayCards.filter { $0.card.subItem.jobCategory == JobCategory.secondary.rawValue }
+            .sorted { ($0.card.subItem.dateStarted ?? "") < ($1.card.subItem.dateStarted ?? "") }
+            .map { $0.card }
+
+        let nextCards = cardsWithDates
+            .filter { $0.date >= nextStart && $0.date <= nextEnd }
+            .sorted { $0.date < $1.date }
+            .map { $0.card }
+
+        kanbanColumns = [
+            KanbanColumn(
+                title: "Yesterday",
+                headerColor: Color(hex: "#FF6D3B"),
+                items: [],
+                sections: [KanbanSection(title: nil, cards: yesterdayCards)],
+                totalCount: yesterdayCards.count
+            ),
+            KanbanColumn(
+                title: "Available Today",
+                headerColor: Color(hex: "#1976D2"),
+                items: [],
+                sections: [
+                    KanbanSection(title: "Primary Jobs", cards: todayPrimary),
+                    KanbanSection(title: "Secondary Jobs", cards: todaySecondary)
+                ],
+                totalCount: todayCards.count
+            ),
+            KanbanColumn(
+                title: "Next 5 Days",
+                headerColor: Color(hex: "#00C875"),
+                items: [],
+                sections: [KanbanSection(title: nil, cards: nextCards)],
+                totalCount: nextCards.count
+            )
+        ]
+    }
+
+    private func resolveSubItemDate(subItem: ShiftSubItemDto, shift: ShiftDto) -> Date? {
+        if let d = parseDateOrNil(subItem.dateStarted) { return d }
+        if let d = parseDateOrNil(subItem.dateCompleted) { return d }
+        if let d = parseDateOrNil(shift.shiftStartTime) { return d }
+        if let d = parseDateOrNil(shift.durationFrom) { return d }
+        return nil
+    }
+
+    private func parseDateOrNil(_ str: String?) -> Date? {
+        guard let raw = str, !raw.isEmpty else { return nil }
+        let cleaned = raw.replacingOccurrences(of: "Z", with: "")
+        let formatters = [
+            { () -> DateFormatter in let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"; f.locale = Locale(identifier: "en_US_POSIX"); return f }(),
+            { () -> DateFormatter in let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSS"; f.locale = Locale(identifier: "en_US_POSIX"); return f }(),
+            { () -> DateFormatter in let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS"; f.locale = Locale(identifier: "en_US_POSIX"); return f }(),
+            { () -> DateFormatter in let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; f.locale = Locale(identifier: "en_US_POSIX"); return f }()
+        ]
+        for f in formatters {
+            if let d = f.date(from: cleaned) { return d }
+        }
+        if cleaned.count >= 10 {
+            let f = DateFormatter()
+            f.dateFormat = "yyyy-MM-dd"
+            f.locale = Locale(identifier: "en_US_POSIX")
+            return f.date(from: String(cleaned.prefix(10)))
+        }
+        return nil
+    }
+
+    private func isRecentlyUpdated(_ modifiedDate: String?) -> Bool {
+        guard let dateStr = modifiedDate, let d = parseDateOrNil(dateStr) else { return false }
+        return d.timeIntervalSinceNow > -24 * 3600
+    }
+
+    private func formatKanbanDateTime(subItemDate: String?, shiftStart: String?) -> String {
+        let source = (subItemDate?.isEmpty == false ? subItemDate : shiftStart) ?? ""
+        if source.isEmpty { return "" }
+        guard let date = parseDateOrNil(source) else { return source }
+        let f = DateFormatter()
+        f.dateFormat = "EEE, MMM d • h:mm a"
+        f.locale = Locale(identifier: "en_US")
+        return f.string(from: date)
     }
 
     // MARK: - Inline Edit Dialogs
@@ -476,6 +693,18 @@ class MainLeadsJobsViewModel {
         editDialog = EditDialogState(
             type: .textEditor, title: "Job Description",
             fieldName: "Instructions", textValue: job.shift.instructions,
+            selectedShiftId: shiftId
+        )
+    }
+
+    // Open the editor for Actual Invoice Amount. Only Admin/Manager (isOwner) can change it.
+    func editActualInvoice(_ shiftId: Int) {
+        guard isOwner else { return }
+        guard let job = findJob(shiftId) else { return }
+        let current = job.shift.actualInvoiceAmount.map { String(format: "%.2f", $0) } ?? ""
+        editDialog = EditDialogState(
+            type: .textEditor, title: "Actual Invoice Amount",
+            fieldName: "ActualInvoiceAmount", textValue: current,
             selectedShiftId: shiftId
         )
     }
@@ -522,13 +751,56 @@ class MainLeadsJobsViewModel {
     }
 
     func editSubItemHSStatus(_ subItemId: Int) {
-        guard !isCaregiver else { return }
+        // Employees can edit subitem fields; plain caregivers cannot.
+        guard !(isCaregiver && !isEmployee) else { return }
         editDialog = EditDialogState(type: .subItemHSPicker, title: "H&S Status", selectedSubItemId: subItemId)
     }
 
     func editSubItemStatus(_ subItemId: Int) {
-        guard !isCaregiver else { return }
+        guard !(isCaregiver && !isEmployee) else { return }
         editDialog = EditDialogState(type: .subItemStatusPicker, title: "Sub-Item Status", selectedSubItemId: subItemId)
+    }
+
+    func editSubItemJobCategory(_ subItemId: Int) {
+        guard !(isCaregiver && !isEmployee) else { return }
+        editDialog = EditDialogState(type: .subItemCategoryPicker, title: "Job Category", selectedSubItemId: subItemId)
+    }
+
+    func selectSubItemJobCategory(_ value: Int) {
+        guard let subItem = findSubItem(editDialog.selectedSubItemId) else { return }
+        var updated = subItem
+        updated.jobCategory = value
+        dismissEditDialog()
+        updateSubItem(updated)
+    }
+
+    // Cache-aware Job Category text/colour.
+    func jobCategoryTextDynamic(_ value: Int) -> String {
+        boardConfigCache.displayName("JobCategory", value: value,
+                                     fallback: value == 2 ? "Secondary" : "Primary")
+    }
+
+    func jobCategoryColorDynamic(_ value: Int) -> Color {
+        let argb = boardConfigCache.color(
+            "JobCategory", value: value,
+            fallback: Self.colorToARGB(value == 2 ? Color(hex: "#9E9E9E") : Color(hex: "#1976D2"))
+        )
+        return Color(argb: argb)
+    }
+
+    func dynamicJobCategoryStatusOptions() -> [StatusOption] {
+        let cached = boardConfigCache.getOptions("JobCategory")
+        if cached.isEmpty {
+            return [
+                StatusOption(name: "Primary", value: 1, color: Color(hex: "#1976D2")),
+                StatusOption(name: "Secondary", value: 2, color: Color(hex: "#9E9E9E"))
+            ]
+        }
+        return cached.map { opt in
+            let argb = BoardConfigCache.parseHexColor(opt.color)
+                ?? Self.colorToARGB(opt.value == 2 ? Color(hex: "#9E9E9E") : Color(hex: "#1976D2"))
+            return StatusOption(name: opt.displayName, value: opt.value, color: Color(argb: argb))
+        }
     }
 
     func editAddress(_ shiftId: Int) {
@@ -554,7 +826,7 @@ class MainLeadsJobsViewModel {
     }
 
     func editSubItemDateStarted(shiftId: Int, subItemId: Int) {
-        guard !isCaregiver else { return }
+        guard !(isCaregiver && !isEmployee) else { return }
         guard let subItem = findSubItem(subItemId) else { return }
         let calendar = Calendar.current
         var date = Date()
@@ -661,6 +933,12 @@ class MainLeadsJobsViewModel {
         case "ProjectName": updatedShift.projectName = editDialog.textValue
         case "FinalMeasure": updatedShift.finalMeasure = editDialog.textValue
         case "Instructions": updatedShift.instructions = editDialog.textValue
+        case "ActualInvoiceAmount":
+            guard isOwner else { return } // server-side guard exists too
+            let cleaned = editDialog.textValue.trimmingCharacters(in: .whitespaces)
+                .replacingOccurrences(of: "$", with: "")
+                .replacingOccurrences(of: ",", with: "")
+            updatedShift.actualInvoiceAmount = Double(cleaned)
         default: return
         }
         dismissEditDialog()

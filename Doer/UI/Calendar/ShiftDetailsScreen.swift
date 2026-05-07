@@ -725,23 +725,23 @@ private struct ClockInOutSection: View {
     @State private var showBackgroundLocationDisclosure = false
     @State private var hasBackgroundLocation = (CLLocationManager().authorizationStatus == .authorizedAlways)
     @State private var pendingBackgroundPrompt = false
-
-    private let locationManager = CLLocationManager()
+    @State private var locationFetcher = OneShotLocationFetcher()
 
     private func performClockIn() {
-        if let loc = locationManager.location {
-            viewModel.clockInWithTracking(latitude: loc.coordinate.latitude, longitude: loc.coordinate.longitude)
-        } else {
-            viewModel.clockInWithTracking(latitude: 0, longitude: 0)
+        locationFetcher.fetch { loc in
+            viewModel.clockInWithTracking(
+                latitude: loc?.coordinate.latitude ?? 0,
+                longitude: loc?.coordinate.longitude ?? 0
+            )
         }
     }
 
     private func refreshPermissionState() {
-        hasBackgroundLocation = CLLocationManager().authorizationStatus == .authorizedAlways
+        hasBackgroundLocation = locationFetcher.authorizationStatus == .authorizedAlways
     }
 
     private func handleClockInTapped() {
-        let status = CLLocationManager().authorizationStatus
+        let status = locationFetcher.authorizationStatus
         switch status {
         case .notDetermined:
             // First time — show disclosure before system prompt
@@ -845,12 +845,14 @@ private struct ClockInOutSection: View {
                 .alert("Clock Out", isPresented: $showClockOutDialog) {
                     TextField("Reason (optional)", text: $clockOutReason)
                     Button("Clock Out", role: .destructive) {
-                        let lm = CLLocationManager()
-                        viewModel.clockOutWithTracking(
-                            latitude: lm.location?.coordinate.latitude ?? 0,
-                            longitude: lm.location?.coordinate.longitude ?? 0,
-                            reasonCode: clockOutReason.isEmpty ? nil : clockOutReason
-                        )
+                        let reason = clockOutReason.isEmpty ? nil : clockOutReason
+                        locationFetcher.fetch { loc in
+                            viewModel.clockOutWithTracking(
+                                latitude: loc?.coordinate.latitude ?? 0,
+                                longitude: loc?.coordinate.longitude ?? 0,
+                                reasonCode: reason
+                            )
+                        }
                     }
                     Button("Cancel", role: .cancel) {}
                 } message: {
@@ -865,7 +867,7 @@ private struct ClockInOutSection: View {
             refreshPermissionState()
             if pendingBackgroundPrompt {
                 pendingBackgroundPrompt = false
-                let status = CLLocationManager().authorizationStatus
+                let status = locationFetcher.authorizationStatus
                 switch status {
                 case .authorizedWhenInUse:
                     showBackgroundLocationDisclosure = true
@@ -881,7 +883,7 @@ private struct ClockInOutSection: View {
                 // Request When-In-Use; when iOS dialog closes, didBecomeActive fires
                 // and we show the Always-upgrade dialog.
                 pendingBackgroundPrompt = true
-                locationManager.requestWhenInUseAuthorization()
+                locationFetcher.requestWhenInUseAuthorization()
             }
             Button("Cancel", role: .cancel) {}
         } message: {
@@ -889,7 +891,7 @@ private struct ClockInOutSection: View {
         }
         .alert("Allow background location", isPresented: $showBackgroundLocationDisclosure) {
             Button("Continue") {
-                locationManager.requestAlwaysAuthorization()
+                locationFetcher.requestAlwaysAuthorization()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     refreshPermissionState()
                     performClockIn()
@@ -922,5 +924,74 @@ private struct ActionButton: View {
                 .background(bgColor)
                 .cornerRadius(20)
         }
+    }
+}
+
+// MARK: - One-shot location fetcher
+//
+// CLLocationManager only populates `.location` after `requestLocation()` /
+// `startUpdatingLocation()`; without this, clock-in/out always sent (0, 0).
+// Hands back a fresh fix (or the most recent one if it times out).
+private final class OneShotLocationFetcher: NSObject, CLLocationManagerDelegate {
+    private let manager = CLLocationManager()
+    private var pending: ((CLLocation?) -> Void)?
+    private var timeoutWorkItem: DispatchWorkItem?
+
+    override init() {
+        super.init()
+        manager.delegate = self
+        manager.desiredAccuracy = kCLLocationAccuracyBest
+    }
+
+    var authorizationStatus: CLAuthorizationStatus { manager.authorizationStatus }
+
+    func requestWhenInUseAuthorization() {
+        manager.requestWhenInUseAuthorization()
+    }
+
+    func requestAlwaysAuthorization() {
+        manager.requestAlwaysAuthorization()
+    }
+
+    func fetch(timeout: TimeInterval = 6, completion: @escaping (CLLocation?) -> Void) {
+        let status = manager.authorizationStatus
+        guard status == .authorizedAlways || status == .authorizedWhenInUse else {
+            completion(nil)
+            return
+        }
+        if let cached = manager.location, Date().timeIntervalSince(cached.timestamp) < 30 {
+            completion(cached)
+            return
+        }
+        if let prev = pending {
+            prev(nil)
+        }
+        pending = completion
+        timeoutWorkItem?.cancel()
+        let item = DispatchWorkItem { [weak self] in
+            guard let self = self, let cb = self.pending else { return }
+            self.pending = nil
+            cb(self.manager.location)
+        }
+        timeoutWorkItem = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + timeout, execute: item)
+        manager.requestLocation()
+    }
+
+    // MARK: CLLocationManagerDelegate
+
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let cb = pending else { return }
+        pending = nil
+        timeoutWorkItem?.cancel()
+        cb(locations.last)
+    }
+
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("OneShotLocationFetcher error: \(error.localizedDescription)")
+        guard let cb = pending else { return }
+        pending = nil
+        timeoutWorkItem?.cancel()
+        cb(manager.location)
     }
 }

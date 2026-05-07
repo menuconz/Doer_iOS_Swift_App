@@ -35,6 +35,11 @@ struct DoerApp: App {
         WindowGroup {
             ContentView()
                 .preferredColorScheme(.light)
+                .task {
+                    // Warm the BoardConfigCache so dynamic dropdown labels and the
+                    // active board name are available across the app.
+                    await DIContainer.shared.boardConfigCache.load()
+                }
         }
     }
 }

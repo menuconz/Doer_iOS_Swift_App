@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import UIKit
 
 struct SectionState {
     var leads: [LeadsDto] = []
@@ -38,6 +39,7 @@ class QuotedLeadsViewModel {
     private let accountRepository: AccountRepository
     private let preferencesManager: PreferencesManager
     private let googlePlacesService: GooglePlacesService
+    private let boardConfigCache: BoardConfigCache
     private var hasLoaded = false
 
     init(
@@ -45,13 +47,42 @@ class QuotedLeadsViewModel {
         clientRepository: ClientRepository = DIContainer.shared.clientRepository,
         accountRepository: AccountRepository = DIContainer.shared.accountRepository,
         preferencesManager: PreferencesManager = DIContainer.shared.preferencesManager,
-        googlePlacesService: GooglePlacesService = DIContainer.shared.googlePlacesService
+        googlePlacesService: GooglePlacesService = DIContainer.shared.googlePlacesService,
+        boardConfigCache: BoardConfigCache = DIContainer.shared.boardConfigCache
     ) {
         self.leadRepository = leadRepository
         self.clientRepository = clientRepository
         self.accountRepository = accountRepository
         self.preferencesManager = preferencesManager
         self.googlePlacesService = googlePlacesService
+        self.boardConfigCache = boardConfigCache
+    }
+
+    // Cache-aware accessors
+    func leadStatusColor(_ statusId: Int) -> Color {
+        let argb = boardConfigCache.color(
+            "LeadStatus", value: statusId,
+            fallback: argbFromColor(NewLeadsViewModel.getLeadStatusColor(statusId))
+        )
+        return Color(argb: argb)
+    }
+
+    func contractTypeColorDynamic(_ contractType: Int?) -> Color {
+        let argb = boardConfigCache.color(
+            "ContractType", value: contractType ?? -1,
+            fallback: argbFromColor(NewLeadsViewModel.getContractTypeColor(contractType))
+        )
+        return Color(argb: argb)
+    }
+
+    private func argbFromColor(_ c: Color) -> UInt32 {
+        let ui = UIColor(c)
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        ui.getRed(&r, green: &g, blue: &b, alpha: &a)
+        return (UInt32((a * 255).rounded()) & 0xFF) << 24
+            | (UInt32((r * 255).rounded()) & 0xFF) << 16
+            | (UInt32((g * 255).rounded()) & 0xFF) << 8
+            |  UInt32((b * 255).rounded()) & 0xFF
     }
 
     func loadInitialData() {

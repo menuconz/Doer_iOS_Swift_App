@@ -26,6 +26,7 @@ private let colFinalMeasure: CGFloat = 180
 private let colInstructions: CGFloat = 200
 private let colQuote: CGFloat = 180
 private let colContractorQuote: CGFloat = 180
+private let colActualInvoice: CGFloat = 180
 private let colStatus: CGFloat = 180
 private let colFiles: CGFloat = 100
 private let colActions: CGFloat = 225
@@ -34,6 +35,7 @@ private let colActions: CGFloat = 225
 private let subColName: CGFloat = 200
 private let subColHS: CGFloat = 140
 private let subColStatus: CGFloat = 120
+private let subColCategory: CGFloat = 130
 private let subColStarted: CGFloat = 140
 private let subColCompleted: CGFloat = 140
 private let subColFiles: CGFloat = 80
@@ -416,6 +418,7 @@ struct MainLeadsJobsScreen: View {
                 mlSortableHeader("Quote (Sent to Client)", colQuote, "Amount")
             }
             mlSortableHeader("Contractor Quote", colContractorQuote, "AcceptedQuoteAmount")
+            mlSortableHeader("Actual Invoice", colActualInvoice, "ActualInvoiceAmount")
             mlSortableHeader("Status", colStatus, "StatusMessage")
             mlHeaderCell("Files", colFiles, sortable: false)
             mlHeaderCell("Actions", colActions, sortable: false)
@@ -531,6 +534,15 @@ struct MainLeadsJobsScreen: View {
 
                 // Contractor Quote
                 mlCellLabel(viewModel.formatAmount(row.shift.acceptedQuoteAmount), colContractorQuote)
+
+                // Actual Invoice — Admin/Manager can edit; others read-only
+                if viewModel.isOwner {
+                    mlCellLabel(viewModel.formatAmount(row.shift.actualInvoiceAmount), colActualInvoice) {
+                        viewModel.editActualInvoice(row.shift.id)
+                    }
+                } else {
+                    mlCellLabel(viewModel.formatAmount(row.shift.actualInvoiceAmount), colActualInvoice)
+                }
 
                 // Status (colored background, read-only)
                 mlColoredBgCell(row.statusDisplayText, row.statusColor, colStatus)
@@ -656,6 +668,7 @@ struct MainLeadsJobsScreen: View {
                 subItemHeaderCell("\u{1F527} Sub Item", subColName)
                 subItemHeaderCell("\u{1F6E1}\u{FE0F} H&S Status", subColHS)
                 subItemHeaderCell("\u{1F4CA} Status", subColStatus)
+                subItemHeaderCell("\u{1F3AF} Category", subColCategory)
                 subItemHeaderCell("\u{1F680} Date Started", subColStarted)
                 subItemHeaderCell("\u{2705} Completed", subColCompleted)
                 subItemHeaderCell("\u{1F4C1} Files", subColFiles)
@@ -749,6 +762,19 @@ struct MainLeadsJobsScreen: View {
             }
             .frame(width: subColStatus, height: 65)
             .background(statusColor)
+            .clipped()
+            .overlay(Rectangle().stroke(Color(hex: "#E5E7EB"), lineWidth: 0.5))
+
+            // Job Category (Primary/Secondary)
+            Button(action: { viewModel.editSubItemJobCategory(subItem.id) }) {
+                Text(viewModel.jobCategoryTextDynamic(subItem.jobCategory))
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.horizontal, 8)
+            }
+            .frame(width: subColCategory, height: 65)
+            .background(viewModel.jobCategoryColorDynamic(subItem.jobCategory))
             .clipped()
             .overlay(Rectangle().stroke(Color(hex: "#E5E7EB"), lineWidth: 0.5))
 
@@ -850,7 +876,7 @@ struct MainLeadsJobsScreen: View {
             .overlay(Rectangle().stroke(greenPrimary, lineWidth: 2))
 
             // Empty placeholder cells
-            ForEach(Array([subColHS, subColStatus, subColStarted, subColCompleted, subColFiles].enumerated()), id: \.offset) { _, w in
+            ForEach(Array([subColHS, subColStatus, subColCategory, subColStarted, subColCompleted, subColFiles].enumerated()), id: \.offset) { _, w in
                 Color.clear
                     .frame(width: w, height: 50)
                     .background(addSubItemBg)
@@ -898,22 +924,43 @@ struct MainLeadsJobsScreen: View {
 
     private func kanbanColumnView(column: KanbanColumn) -> some View {
         VStack(spacing: 0) {
-            // Column Header
-            Text(column.title)
-                .font(.system(size: 16, weight: .bold))
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(10)
-                .background(column.headerColor)
-                .clipShape(RoundedRectangle(cornerRadius: 14))
+            // Column Header with count badge
+            HStack {
+                Text(column.title)
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Text("\(column.totalCount)")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 10).padding(.vertical, 4)
+                    .background(Color.white.opacity(0.25))
+                    .clipShape(Capsule())
+            }
+            .padding(10)
+            .background(column.headerColor)
+            .clipShape(RoundedRectangle(cornerRadius: 14))
 
             Spacer().frame(height: 12)
 
-            // Cards
-            ScrollView {
-                LazyVStack(spacing: 12) {
-                    ForEach(column.items) { job in
-                        kanbanCard(job: job)
+            if column.totalCount == 0 {
+                Spacer()
+                Text("No jobs").foregroundColor(.gray).font(.system(size: 14))
+                Spacer()
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 8) {
+                        ForEach(column.sections) { section in
+                            if let title = section.title, !title.isEmpty {
+                                Text("━━━ \(title.uppercased()) (\(section.cards.count)) ━━━")
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundColor(Color(hex: "#6B7280"))
+                                    .padding(.vertical, 6)
+                            }
+                            ForEach(section.cards) { card in
+                                kanbanSubItemCard(card: card)
+                            }
+                        }
                     }
                 }
             }
@@ -921,50 +968,46 @@ struct MainLeadsJobsScreen: View {
         .padding(10)
     }
 
-    private func kanbanCard(job: JobRowItem) -> some View {
-        Button(action: { onShiftDetails(job.shift.id) }) {
-            VStack(alignment: .leading, spacing: 8) {
-                // Title + Message
+    private func kanbanSubItemCard(card: KanbanCard) -> some View {
+        Button(action: { onShiftDetails(card.parentShift.id) }) {
+            VStack(alignment: .leading, spacing: 6) {
+                // Subitem name + update bubble
                 HStack {
-                    Text(job.shift.projectName)
-                        .font(.system(size: 16, weight: .bold))
+                    Text(card.subItem.subitem.isEmpty ? "(Untitled subitem)" : card.subItem.subitem)
+                        .font(.system(size: 15, weight: .semibold))
                         .foregroundColor(Color(hex: "#111827"))
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    Button(action: { onViewMessages(job.shift.id) }) {
-                        Text("\u{1F4AC}")
-                            .font(.system(size: 16))
+                    if card.hasUpdates {
+                        Circle()
+                            .fill(Color(hex: "#EF4444"))
+                            .frame(width: 10, height: 10)
+                    }
+                    Button(action: { onViewMessages(card.parentShift.id) }) {
+                        Text("\u{1F4AC}").font(.system(size: 16))
                     }
                 }
 
-                // Duration From
-                HStack {
-                    Text("\u{1F4C5} Duration From")
-                        .font(.system(size: 14))
-                        .foregroundColor(Color(hex: "#111827"))
-                    Spacer()
-                    Text(job.shift.durationFromString.isEmpty ? job.shift.durationFrom : job.shift.durationFromString)
-                        .font(.system(size: 14))
-                        .foregroundColor(Color(hex: "#6B7280"))
-                        .padding(8)
-                        .background(Color(hex: "#F3F4F6"))
-                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(hex: "#E5E7EB"), lineWidth: 1))
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                }
+                // Project name
+                Text(card.projectName.isEmpty ? "—" : card.projectName)
+                    .font(.system(size: 13))
+                    .foregroundColor(Color(hex: "#6B7280"))
 
-                // Sub Items count
+                // Date / Time + status chip
                 HStack {
-                    Text("Sub Items")
-                        .font(.system(size: 14))
-                    Spacer()
-                    Text("\(job.subItems.count)")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(textPrimary)
-                        .padding(6)
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(hex: "#E5E7EB"), lineWidth: 1))
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    Text(card.displayDateTime.isEmpty ? "No date" : card.displayDateTime)
+                        .font(.system(size: 12))
+                        .foregroundColor(Color(hex: "#6B7280"))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Text(card.statusText)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(card.statusColor)
+                        .padding(.horizontal, 8).padding(.vertical, 3)
+                        .background(card.statusColor.opacity(0.15))
+                        .overlay(Capsule().stroke(card.statusColor, lineWidth: 1))
+                        .clipShape(Capsule())
                 }
             }
-            .padding(10)
+            .padding(12)
         }
         .buttonStyle(.plain)
         .background(Color.white)
@@ -1071,6 +1114,15 @@ struct MainLeadsJobsScreen: View {
                 items: MainLeadsJobsViewModel.subItemStatusOptions.map { ($0.value, $0.name, $0.color) },
                 onSelect: { value in
                     viewModel.selectSubItemStatus(value)
+                },
+                onDismiss: { viewModel.dismissEditDialog() }
+            )
+        case .subItemCategoryPicker:
+            MLStatusPickerSheet(
+                title: "Job Category",
+                items: viewModel.dynamicJobCategoryStatusOptions().map { ($0.value, $0.name, $0.color) },
+                onSelect: { value in
+                    viewModel.selectSubItemJobCategory(value)
                 },
                 onDismiss: { viewModel.dismissEditDialog() }
             )

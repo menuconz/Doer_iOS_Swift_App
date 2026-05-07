@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import UIKit
 
 enum EditField {
     case projectDescription, owner, status, cost, client, location, contractType
@@ -30,6 +31,7 @@ class NewLeadsViewModel {
     private let accountRepository: AccountRepository
     private let preferencesManager: PreferencesManager
     private let googlePlacesService: GooglePlacesService
+    private let boardConfigCache: BoardConfigCache
     private var hasLoaded = false
 
     init(
@@ -37,13 +39,43 @@ class NewLeadsViewModel {
         clientRepository: ClientRepository = DIContainer.shared.clientRepository,
         accountRepository: AccountRepository = DIContainer.shared.accountRepository,
         preferencesManager: PreferencesManager = DIContainer.shared.preferencesManager,
-        googlePlacesService: GooglePlacesService = DIContainer.shared.googlePlacesService
+        googlePlacesService: GooglePlacesService = DIContainer.shared.googlePlacesService,
+        boardConfigCache: BoardConfigCache = DIContainer.shared.boardConfigCache
     ) {
         self.leadRepository = leadRepository
         self.clientRepository = clientRepository
         self.accountRepository = accountRepository
         self.preferencesManager = preferencesManager
         self.googlePlacesService = googlePlacesService
+        self.boardConfigCache = boardConfigCache
+    }
+
+    // Cache-aware accessors so admin-renamed labels and colours appear automatically.
+    func leadStatusColor(_ statusId: Int) -> Color {
+        let argb = boardConfigCache.color(
+            "LeadStatus", value: statusId,
+            fallback: argbFromColor(Self.getLeadStatusColor(statusId))
+        )
+        return Color(argb: argb)
+    }
+
+    func contractTypeColorDynamic(_ contractType: Int?) -> Color {
+        let argb = boardConfigCache.color(
+            "ContractType", value: contractType ?? -1,
+            fallback: argbFromColor(Self.getContractTypeColor(contractType))
+        )
+        return Color(argb: argb)
+    }
+
+    private func argbFromColor(_ c: Color) -> UInt32 {
+        let ui = UIColor(c)
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        ui.getRed(&r, green: &g, blue: &b, alpha: &a)
+        let R = UInt32((r * 255).rounded()) & 0xFF
+        let G = UInt32((g * 255).rounded()) & 0xFF
+        let B = UInt32((b * 255).rounded()) & 0xFF
+        let A = UInt32((a * 255).rounded()) & 0xFF
+        return (A << 24) | (R << 16) | (G << 8) | B
     }
 
     func loadInitialData() {
