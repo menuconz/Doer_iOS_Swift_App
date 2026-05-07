@@ -39,6 +39,10 @@
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<false/>
 	</dict>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>nz.co.doer.trackingsync</string>
+	</array>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>
