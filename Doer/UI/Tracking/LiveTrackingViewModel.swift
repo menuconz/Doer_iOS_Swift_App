@@ -72,23 +72,7 @@ class LiveTrackingViewModel: ObservableObject {
         }
         selectedDoerUserId = doer.userId
         selectedDoerRoute = []
-
-        guard let siteLat = doer.siteLatitude, let siteLng = doer.siteLongitude,
-              siteLat != 0, siteLng != 0 else { return }
-
-        // Fetch route using MKDirections
-        let request = MKDirections.Request()
-        request.source = MKMapItem(placemark: MKPlacemark(coordinate: doer.coordinate))
-        request.destination = MKMapItem(placemark: MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: siteLat, longitude: siteLng)))
-        request.transportType = .automobile
-
-        Task {
-            let directions = MKDirections(request: request)
-            if let response = try? await directions.calculate(),
-               let route = response.routes.first {
-                selectedDoerRoute = route.polyline.coordinates
-            }
-        }
+        recomputeRouteFor(doer)
     }
 
     private func fetchActiveDoers() async {
@@ -117,13 +101,45 @@ class LiveTrackingViewModel: ObservableObject {
             lastUpdated = formatter.string(from: Date())
             totalActive = doers.count
             enRouteCount = doers.filter { $0.trackingState == .enRoute }.count
-            onSiteCount = doers.filter { $0.trackingState == .onSite }.count
+            // Matches Android: onSite count includes ARRIVED.
+            onSiteCount = doers.filter { $0.trackingState == .onSite || $0.trackingState == .arrived }.count
             arrivedCount = doers.filter { $0.trackingState == .arrived }.count
+
+            // If a doer is currently selected, recompute their route off the latest position
+            // so the polyline tracks them as they move (parity with Android).
+            if let selectedId = selectedDoerUserId,
+               let updated = doers.first(where: { $0.userId == selectedId }) {
+                recomputeRouteFor(updated)
+            }
 
         case .error(let msg, _):
             isLoading = false
             errorMessage = msg
         case .loading: break
+        }
+    }
+
+    private func recomputeRouteFor(_ doer: ActiveDoerUi) {
+        guard let siteLat = doer.siteLatitude, let siteLng = doer.siteLongitude,
+              siteLat != 0, siteLng != 0 else {
+            selectedDoerRoute = []
+            return
+        }
+        // Only show route while travelling — once on-site the doer pin already covers the site.
+        guard doer.trackingState == .enRoute || doer.trackingState == .clockedIn else {
+            selectedDoerRoute = []
+            return
+        }
+        let request = MKDirections.Request()
+        request.source = MKMapItem(placemark: MKPlacemark(coordinate: doer.coordinate))
+        request.destination = MKMapItem(placemark: MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: siteLat, longitude: siteLng)))
+        request.transportType = .automobile
+        Task {
+            let directions = MKDirections(request: request)
+            if let response = try? await directions.calculate(),
+               let route = response.routes.first {
+                selectedDoerRoute = route.polyline.coordinates
+            }
         }
     }
 

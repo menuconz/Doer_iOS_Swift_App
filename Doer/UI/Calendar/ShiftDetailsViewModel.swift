@@ -143,18 +143,22 @@ class ShiftDetailsViewModel {
         ReminderOption(label: "2 days before", offsetMinutes: 2880)
     ]
 
+    private let boardConfigCache: BoardConfigCache
+
     init(
         shiftId: Int,
         shiftRepository: ShiftRepository = DIContainer.shared.shiftRepository,
         accountRepository: AccountRepository = DIContainer.shared.accountRepository,
         clientRepository: ClientRepository = DIContainer.shared.clientRepository,
-        preferencesManager: PreferencesManager = DIContainer.shared.preferencesManager
+        preferencesManager: PreferencesManager = DIContainer.shared.preferencesManager,
+        boardConfigCache: BoardConfigCache = DIContainer.shared.boardConfigCache
     ) {
         self.shiftId = shiftId
         self.shiftRepository = shiftRepository
         self.accountRepository = accountRepository
         self.clientRepository = clientRepository
         self.preferencesManager = preferencesManager
+        self.boardConfigCache = boardConfigCache
     }
 
     func loadInitialData() {
@@ -589,55 +593,81 @@ class ShiftDetailsViewModel {
 
     // MARK: - Helpers
 
-    private func getStatusDisplay(_ statusId: Int, _ hasQuotations: Bool) -> (String, Color) {
-        switch statusId {
-        case 1: return hasQuotations ? ("Quoted", Color(hex: "007AFF")) : ("Created", Color(hex: "FF9500"))
-        case 2: return ("Accepted", Color(hex: "9D50DD"))
-        case 3: return ("Started", Color(hex: "00C875"))
-        case 4: return ("End", Color(hex: "74AFCC"))
-        case 5: return ("Not Completed", Color(hex: "FF3B30"))
-        case 6: return ("Completed", Color(hex: "FFCB00"))
-        default: return ("Unknown", Color(hex: "C4C4C4"))
+    // Cache lookup with a hardcoded fallback so labels stay in sync with admin edits.
+    private func cachedDisplay(_ column: String, value: Int, fallbackName: String,
+                               fallbackColorHex: String) -> (String, Color) {
+        let opts = boardConfigCache.getOptions(column)
+        if let opt = opts.first(where: { $0.value == value }) {
+            let argb = BoardConfigCache.parseHexColor(opt.color)
+                ?? BoardConfigCache.parseHexColor(fallbackColorHex)
+                ?? 0xFFC4C4C4
+            return (opt.displayName, Color(argb: argb))
         }
+        return (fallbackName, Color(hex: fallbackColorHex))
+    }
+
+    private func getStatusDisplay(_ statusId: Int, _ hasQuotations: Bool) -> (String, Color) {
+        let (defaultName, defaultHex): (String, String)
+        switch statusId {
+        case 1: (defaultName, defaultHex) = hasQuotations ? ("Quoted", "007AFF") : ("Created", "FF9500")
+        case 2: (defaultName, defaultHex) = ("Accepted", "9D50DD")
+        case 3: (defaultName, defaultHex) = ("Started", "00C875")
+        case 4: (defaultName, defaultHex) = ("End", "74AFCC")
+        case 5: (defaultName, defaultHex) = ("Not Completed", "FF3B30")
+        case 6: (defaultName, defaultHex) = ("Completed", "FFCB00")
+        default: (defaultName, defaultHex) = ("Unknown", "C4C4C4")
+        }
+        return cachedDisplay("ShiftStatus", value: statusId,
+                             fallbackName: defaultName, fallbackColorHex: defaultHex)
     }
 
     private func getHsFormDisplay(_ hsForms: Int?) -> (String, Color)? {
-        switch hsForms {
-        case 0: return ("No H&S", Color(hex: "C4C4C4"))
-        case 1: return ("SSSP", Color(hex: "007AFF"))
-        case 2: return ("JSA", Color(hex: "FF9500"))
-        case 3: return ("Take 5", Color(hex: "FF3B30"))
-        case 4: return ("Done", Color(hex: "34C759"))
-        case 5: return ("Missing H&S", Color(hex: "808080"))
+        guard let hs = hsForms else { return nil }
+        let (defaultName, defaultHex): (String, String)
+        switch hs {
+        case 0: (defaultName, defaultHex) = ("No H&S", "C4C4C4")
+        case 1: (defaultName, defaultHex) = ("SSSP", "007AFF")
+        case 2: (defaultName, defaultHex) = ("JSA", "FF9500")
+        case 3: (defaultName, defaultHex) = ("Take 5", "FF3B30")
+        case 4: (defaultName, defaultHex) = ("Done", "34C759")
+        case 5: (defaultName, defaultHex) = ("Missing H&S", "808080")
         default: return nil
         }
+        return cachedDisplay("HSRequired", value: hs,
+                             fallbackName: defaultName, fallbackColorHex: defaultHex)
     }
 
     private func getContractTypeText(_ contractType: Int?) -> String {
+        let fallback: String
         switch contractType {
-        case 1: return "To Be Confirmed"
-        case 2: return "Full Contract"
-        case 3: return "Supply Place And Finish"
-        case 4: return "Place And Finish"
-        case 5: return "Labour Supply"
-        case 6: return "Box Place And Finish"
-        case 7: return "Remedial"
-        case 8: return "Supply Place Finish And Cut"
-        case 9: return "Place Finish And Cut"
-        case 10: return "Other Services"
-        case 11: return "Meetings"
-        default: return "Not Set"
+        case 1: fallback = "To Be Confirmed"
+        case 2: fallback = "Full Contract"
+        case 3: fallback = "Supply Place And Finish"
+        case 4: fallback = "Place And Finish"
+        case 5: fallback = "Labour Supply"
+        case 6: fallback = "Box Place And Finish"
+        case 7: fallback = "Remedial"
+        case 8: fallback = "Supply Place Finish And Cut"
+        case 9: fallback = "Place Finish And Cut"
+        case 10: fallback = "Other Services"
+        case 11: fallback = "Meetings"
+        default: fallback = "Not Set"
         }
+        return boardConfigCache.displayName("ContractType", value: contractType ?? -1,
+                                            fallback: fallback)
     }
 
     private func getInvoiceStatusText(_ invoiceStatus: Int?) -> String {
+        let fallback: String
         switch invoiceStatus {
-        case 1: return "Not Yet Created"
-        case 2: return "To Be Invoiced"
-        case 3: return "Invoice Drafted"
-        case 4: return "Invoice Sent"
-        default: return "Not Set"
+        case 1: fallback = "Not Yet Created"
+        case 2: fallback = "To Be Invoiced"
+        case 3: fallback = "Invoice Drafted"
+        case 4: fallback = "Invoice Sent"
+        default: fallback = "Not Set"
         }
+        return boardConfigCache.displayName("InvoiceStatus", value: invoiceStatus ?? -1,
+                                            fallback: fallback)
     }
 
     private func formatDateTime(_ dateStr: String) -> String {

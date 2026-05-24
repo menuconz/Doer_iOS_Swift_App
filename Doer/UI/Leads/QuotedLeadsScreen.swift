@@ -27,6 +27,7 @@ struct QuotedLeadsScreen: View {
     @State private var viewModel = QuotedLeadsViewModel()
     @State private var showSnackbar = false
     @State private var snackbarMessage = ""
+    @State private var boardConfigCache: BoardConfigCache = DIContainer.shared.boardConfigCache
 
     var body: some View {
         ZStack {
@@ -95,6 +96,9 @@ struct QuotedLeadsScreen: View {
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(true)
             .onAppear { viewModel.loadInitialData() }
+            .onChange(of: boardConfigCache.version) { _, _ in
+                viewModel.refresh()
+            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: onOpenDrawer) {
@@ -157,14 +161,17 @@ struct QuotedLeadsScreen: View {
                 )
             case .status:
                 StatusBottomSheetView(
-                    statuses: QuotedLeadsViewModel.quotedLeadStatuses,
+                    statuses: viewModel.dynamicLeadStatuses,
                     onSelect: { viewModel.selectLeadStatus($0) },
-                    onDismiss: { viewModel.cancelEdit() }
+                    onDismiss: { viewModel.cancelEdit() },
+                    colorProvider: { viewModel.leadStatusColor($0) }
                 )
             case .contractType:
                 ContractTypeBottomSheetView(
+                    contractTypes: viewModel.dynamicContractTypes,
                     onSelect: { viewModel.selectContractType($0) },
-                    onDismiss: { viewModel.cancelEdit() }
+                    onDismiss: { viewModel.cancelEdit() },
+                    colorProvider: { viewModel.contractTypeColorDynamic($0) }
                 )
             case .client:
                 ClientBottomSheetView(
@@ -266,7 +273,7 @@ private struct QuotedSectionView: View {
                                         EditableCellView(text: lead.ownerName, width: colOwner) {
                                             onEditLead(lead, .owner)
                                         }
-                                        SolidColorCellView(text: lead.statusName, width: colStatus, bgColor: viewModel.leadStatusColor(lead.statusId)) {
+                                        SolidColorCellView(text: viewModel.leadStatusName(lead.statusId, fallback: lead.statusName), width: colStatus, bgColor: viewModel.leadStatusColor(lead.statusId)) {
                                             onEditLead(lead, .status)
                                         }
                                         EditableCellView(text: lead.costFromQuote != nil ? "\(lead.costFromQuote!)" : "", width: colCost) {
@@ -278,7 +285,7 @@ private struct QuotedSectionView: View {
                                         EditableCellView(text: lead.location, width: colLocation) {
                                             onEditLead(lead, .location)
                                         }
-                                        SolidColorCellView(text: lead.contractTypeName, width: colContractType, bgColor: viewModel.contractTypeColorDynamic(lead.contractType)) {
+                                        SolidColorCellView(text: viewModel.contractTypeName(lead.contractType, fallback: lead.contractTypeName), width: colContractType, bgColor: viewModel.contractTypeColorDynamic(lead.contractType)) {
                                             onEditLead(lead, .contractType)
                                         }
                                         DataCellView(text: viewModel.formatDate(lead.createdDate), width: colCreatedDate)

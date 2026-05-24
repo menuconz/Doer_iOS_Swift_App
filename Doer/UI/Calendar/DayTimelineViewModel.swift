@@ -55,6 +55,7 @@ class DayTimelineViewModel {
 
     private let shiftRepository: ShiftRepository
     private let preferencesManager: PreferencesManager
+    private let boardConfigCache: BoardConfigCache
     private let calendar = Calendar.current
     private var earliestDate: Date
     private var latestDate: Date
@@ -65,10 +66,12 @@ class DayTimelineViewModel {
     init(
         date: String = "",
         shiftRepository: ShiftRepository = DIContainer.shared.shiftRepository,
-        preferencesManager: PreferencesManager = DIContainer.shared.preferencesManager
+        preferencesManager: PreferencesManager = DIContainer.shared.preferencesManager,
+        boardConfigCache: BoardConfigCache = DIContainer.shared.boardConfigCache
     ) {
         self.shiftRepository = shiftRepository
         self.preferencesManager = preferencesManager
+        self.boardConfigCache = boardConfigCache
         self.earliestDate = Calendar.current.date(byAdding: .day, value: -90, to: Date())!
         self.latestDate = Calendar.current.date(byAdding: .day, value: 90, to: Date())!
 
@@ -104,6 +107,16 @@ class DayTimelineViewModel {
         Task { @MainActor in
             await loadShiftsForDate(selectedDate)
         }
+    }
+
+    // Cache-aware contract-type color used by timeline blocks.
+    func contractTypeColorDynamic(_ value: Int?) -> Color {
+        if let hex = boardConfigCache.getOptions("ContractType")
+            .first(where: { $0.value == value ?? -1 })?.color,
+           let argb = BoardConfigCache.parseHexColor(hex) {
+            return Color(argb: argb)
+        }
+        return CalendarViewModel.getContractTypeColor(value)
     }
 
     func selectDate(_ date: Date) {
@@ -274,7 +287,7 @@ class DayTimelineViewModel {
             address: shift.address,
             durationText: durationText,
             statusMessage: statusMessage,
-            contractColor: CalendarViewModel.getContractTypeColor(shift.contractType)
+            contractColor: contractTypeColorDynamic(shift.contractType)
         )
     }
 
@@ -353,7 +366,7 @@ class DayTimelineViewModel {
                 projectName: block.projectName,
                 address: block.shift.address,
                 durationText: block.durationText,
-                contractColor: CalendarViewModel.getContractTypeColor(block.shift.contractType),
+                contractColor: contractTypeColorDynamic(block.shift.contractType),
                 startHour: block.startHour,
                 durationHours: block.durationHours,
                 columnIndex: assignedCol,

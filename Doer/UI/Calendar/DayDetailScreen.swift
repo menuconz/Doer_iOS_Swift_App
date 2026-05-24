@@ -710,24 +710,24 @@ private struct SubItemRowView: View {
             .overlay(Rectangle().stroke(Color.gray.opacity(0.5), lineWidth: 0.5))
 
             // H&S
-            Text(DayDetailViewModel.getSubItemHSText(subItem.hsRequired))
+            Text(viewModel.subItemHSTextDynamic(subItem.hsRequired))
                 .font(.system(size: 12)).fontWeight(.bold).foregroundColor(.white)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.horizontal, 8)
                 .frame(width: ColW.subHs, height: 65)
-                .background(DayDetailViewModel.getSubItemHSColor(subItem.hsRequired))
+                .background(viewModel.subItemHSColorDynamic(subItem.hsRequired))
                 .clipped()
                 .overlay(Rectangle().stroke(Color.gray.opacity(0.5), lineWidth: 0.5))
                 .contentShape(Rectangle())
                 .onTapGesture { viewModel.openSubItemHS(shiftId, subItem.id) }
 
             // Status
-            Text(DayDetailViewModel.getSubItemStatusText(subItem.status))
+            Text(viewModel.subItemStatusTextDynamic(subItem.status))
                 .font(.system(size: 12)).fontWeight(.bold).foregroundColor(.white)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.horizontal, 8)
                 .frame(width: ColW.subStatus, height: 65)
-                .background(DayDetailViewModel.getSubItemStatusColor(subItem.status))
+                .background(viewModel.subItemStatusColorDynamic(subItem.status))
                 .clipped()
                 .overlay(Rectangle().stroke(Color.gray.opacity(0.5), lineWidth: 0.5))
                 .contentShape(Rectangle())

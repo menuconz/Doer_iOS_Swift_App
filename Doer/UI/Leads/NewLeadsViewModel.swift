@@ -67,6 +67,28 @@ class NewLeadsViewModel {
         return Color(argb: argb)
     }
 
+    // Cache-aware list of LeadStatus picker options.
+    var dynamicLeadStatuses: [(Int, String)] {
+        let cached = boardConfigCache.getOptions("LeadStatus")
+        return cached.isEmpty ? Self.leadStatuses : cached.map { ($0.value, $0.displayName) }
+    }
+
+    // Cache-aware list of ContractType picker options.
+    var dynamicContractTypes: [(Int, String)] {
+        let cached = boardConfigCache.getOptions("ContractType")
+        return cached.isEmpty ? Self.contractTypes : cached.map { ($0.value, $0.displayName) }
+    }
+
+    // Resolve a status id to a display name via cache; fall back to the value baked
+    // into the row when the cache hasn't loaded or the id is unknown.
+    func leadStatusName(_ statusId: Int, fallback: String) -> String {
+        boardConfigCache.displayName("LeadStatus", value: statusId, fallback: fallback)
+    }
+
+    func contractTypeName(_ contractType: Int?, fallback: String) -> String {
+        boardConfigCache.displayName("ContractType", value: contractType ?? -1, fallback: fallback)
+    }
+
     private func argbFromColor(_ c: Color) -> UInt32 {
         let ui = UIColor(c)
         var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0

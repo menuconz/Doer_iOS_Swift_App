@@ -42,6 +42,7 @@ class CalendarViewModel {
 
     private let shiftRepository: ShiftRepository
     private let preferencesManager: PreferencesManager
+    private let boardConfigCache: BoardConfigCache
     private var shiftsCache: [String: [ShiftDto]] = [:]
     private let calendar = Calendar.current
 
@@ -49,15 +50,27 @@ class CalendarViewModel {
 
     init(
         shiftRepository: ShiftRepository = DIContainer.shared.shiftRepository,
-        preferencesManager: PreferencesManager = DIContainer.shared.preferencesManager
+        preferencesManager: PreferencesManager = DIContainer.shared.preferencesManager,
+        boardConfigCache: BoardConfigCache = DIContainer.shared.boardConfigCache
     ) {
         self.shiftRepository = shiftRepository
         self.preferencesManager = preferencesManager
+        self.boardConfigCache = boardConfigCache
 
         isAdmin = preferencesManager.isAdmin
         isManager = preferencesManager.isManager || preferencesManager.isCustomer
         isCaregiver = preferencesManager.isCaregiver
         isCustomer = preferencesManager.isCustomer
+    }
+
+    // Cache-aware contract-type color used to paint multi-day event chips.
+    func contractTypeColorDynamic(_ value: Int?) -> Color {
+        if let hex = boardConfigCache.getOptions("ContractType")
+            .first(where: { $0.value == value ?? -1 })?.color,
+           let argb = BoardConfigCache.parseHexColor(hex) {
+            return Color(argb: argb)
+        }
+        return Self.getContractTypeColor(value)
     }
 
     func loadInitialData() {
@@ -285,7 +298,7 @@ class CalendarViewModel {
                 multiDayEvents.append(MultiDayEvent(
                     id: event.shift.id,
                     title: event.shift.projectName.isEmpty ? event.shift.address : event.shift.projectName,
-                    color: Self.getContractTypeColor(event.shift.contractType),
+                    color: contractTypeColorDynamic(event.shift.contractType),
                     shift: event.shift,
                     startDate: event.from,
                     endDate: event.to,

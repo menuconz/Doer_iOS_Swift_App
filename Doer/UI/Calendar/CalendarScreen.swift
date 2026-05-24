@@ -3,6 +3,7 @@ import SwiftUI
 struct CalendarScreen: View {
     @Binding var path: NavigationPath
     @State private var viewModel = CalendarViewModel()
+    @State private var boardConfigCache: BoardConfigCache = DIContainer.shared.boardConfigCache
 
     var body: some View {
         VStack(spacing: 0) {
@@ -68,6 +69,9 @@ struct CalendarScreen: View {
         .loadingOverlay(viewModel.isLoading)
         .onAppear {
             viewModel.refreshOnAppear()
+        }
+        .onChange(of: boardConfigCache.version) { _, _ in
+            viewModel.refresh()
         }
     }
 }

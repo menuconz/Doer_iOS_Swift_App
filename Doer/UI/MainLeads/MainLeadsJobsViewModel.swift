@@ -420,14 +420,14 @@ class MainLeadsJobsViewModel {
             s.hasQuotations = hasQuotations
             return JobRowItem(
                 shift: s,
-                statusDisplayText: Self.getStatusText(shift.statusId, hasQuotations: hasQuotations),
-                statusColor: Self.getStatusColor(shift.statusId, hasQuotations: hasQuotations),
-                invoiceDisplayText: Self.getInvoiceText(shift.invoiceStatus),
-                invoiceColor: Self.getInvoiceColor(shift.invoiceStatus),
-                contractTypeDisplayText: Self.getContractTypeText(shift.contractType),
-                contractTypeColor: Self.getContractTypeColor(shift.contractType),
-                hsFormText: Self.getHSFormText(shift.hsForms),
-                hsFormColor: Self.getHSFormColor(shift.hsForms),
+                statusDisplayText: statusText(shift.statusId, hasQuotations: hasQuotations),
+                statusColor: statusColor(shift.statusId, hasQuotations: hasQuotations),
+                invoiceDisplayText: invoiceText(shift.invoiceStatus),
+                invoiceColor: invoiceColor(shift.invoiceStatus),
+                contractTypeDisplayText: contractTypeText(shift.contractType),
+                contractTypeColor: contractTypeColor(shift.contractType),
+                hsFormText: hsFormText(shift.hsForms),
+                hsFormColor: hsFormColor(shift.hsForms),
                 subItems: (shift.shiftSubItems ?? []).map { item in
                     var enriched = item
                     if enriched.dateStartedString.isEmpty, let ds = enriched.dateStarted, !ds.isEmpty {
@@ -803,6 +803,34 @@ class MainLeadsJobsViewModel {
         }
     }
 
+    // Cache-aware versions of the static picker option lists. Each falls back to the
+    // hardcoded list when the cache is empty so the UI never shows nothing.
+    private func dynamicOptions(_ columnName: String, fallback: [StatusOption]) -> [StatusOption] {
+        let cached = boardConfigCache.getOptions(columnName)
+        guard !cached.isEmpty else { return fallback }
+        return cached.map { opt in
+            let fallbackColor = fallback.first(where: { $0.value == opt.value })?.color ?? Color(hex: "#C4C4C4")
+            let argb = BoardConfigCache.parseHexColor(opt.color) ?? Self.colorToARGB(fallbackColor)
+            return StatusOption(name: opt.displayName, value: opt.value, color: Color(argb: argb))
+        }
+    }
+
+    func dynamicContractTypeOptions() -> [StatusOption] {
+        dynamicOptions("ContractType", fallback: Self.contractTypeOptions)
+    }
+
+    func dynamicInvoiceStatusOptions() -> [StatusOption] {
+        dynamicOptions("InvoiceStatus", fallback: Self.invoiceStatusOptions)
+    }
+
+    func dynamicHSFormOptions() -> [StatusOption] {
+        dynamicOptions("HSRequired", fallback: Self.hsFormOptions)
+    }
+
+    func dynamicSubItemStatusOptions() -> [StatusOption] {
+        dynamicOptions("SubItemStatus", fallback: Self.subItemStatusOptions)
+    }
+
     func editAddress(_ shiftId: Int) {
         guard !isCaregiver else { return }
         guard let job = findJob(shiftId) else { return }
@@ -1042,14 +1070,14 @@ class MainLeadsJobsViewModel {
             s.shiftSubItems = row.shift.shiftSubItems
             return JobRowItem(
                 shift: s,
-                statusDisplayText: Self.getStatusText(enrichedShift.statusId, hasQuotations: hasQuotations),
-                statusColor: Self.getStatusColor(enrichedShift.statusId, hasQuotations: hasQuotations),
-                invoiceDisplayText: Self.getInvoiceText(enrichedShift.invoiceStatus),
-                invoiceColor: Self.getInvoiceColor(enrichedShift.invoiceStatus),
-                contractTypeDisplayText: Self.getContractTypeText(enrichedShift.contractType),
-                contractTypeColor: Self.getContractTypeColor(enrichedShift.contractType),
-                hsFormText: Self.getHSFormText(enrichedShift.hsForms),
-                hsFormColor: Self.getHSFormColor(enrichedShift.hsForms),
+                statusDisplayText: statusText(enrichedShift.statusId, hasQuotations: hasQuotations),
+                statusColor: statusColor(enrichedShift.statusId, hasQuotations: hasQuotations),
+                invoiceDisplayText: invoiceText(enrichedShift.invoiceStatus),
+                invoiceColor: invoiceColor(enrichedShift.invoiceStatus),
+                contractTypeDisplayText: contractTypeText(enrichedShift.contractType),
+                contractTypeColor: contractTypeColor(enrichedShift.contractType),
+                hsFormText: hsFormText(enrichedShift.hsForms),
+                hsFormColor: hsFormColor(enrichedShift.hsForms),
                 subItems: row.subItems,
                 isExpanded: row.isExpanded,
                 isOwner: row.isOwner,

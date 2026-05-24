@@ -4,6 +4,7 @@ struct DayTimelineScreen: View {
     @Binding var path: NavigationPath
     let date: String
     @State private var viewModel: DayTimelineViewModel
+    @State private var boardConfigCache: BoardConfigCache = DIContainer.shared.boardConfigCache
 
     init(path: Binding<NavigationPath>, date: String) {
         self._path = path
@@ -234,6 +235,9 @@ struct DayTimelineScreen: View {
             } else {
                 viewModel.refresh()
             }
+        }
+        .onChange(of: boardConfigCache.version) { _, _ in
+            viewModel.refresh()
         }
     }
 

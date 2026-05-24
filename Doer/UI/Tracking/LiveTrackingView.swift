@@ -108,6 +108,36 @@ struct LiveTrackingView: View {
 
 // MARK: - Map View
 
+// Annotation that carries the doer's tracking state so the delegate can color the marker.
+final class DoerAnnotation: NSObject, MKAnnotation {
+    let coordinate: CLLocationCoordinate2D
+    let title: String?
+    let subtitle: String?
+    let trackingState: DoerTrackingState
+    let isSite: Bool
+
+    init(coordinate: CLLocationCoordinate2D, title: String?, subtitle: String?,
+         trackingState: DoerTrackingState, isSite: Bool = false) {
+        self.coordinate = coordinate
+        self.title = title
+        self.subtitle = subtitle
+        self.trackingState = trackingState
+        self.isSite = isSite
+    }
+}
+
+private func markerColor(for state: DoerTrackingState) -> UIColor {
+    // Mirrors the Android LiveTrackingScreen marker hue palette.
+    switch state {
+    case .enRoute:   return .systemOrange
+    case .arrived:   return .systemGreen
+    case .onSite:    return .systemGreen
+    case .leaving:   return .systemYellow
+    case .clockedIn: return .systemBlue
+    default:         return .systemRed
+    }
+}
+
 struct LiveMapView: UIViewRepresentable {
     let doers: [ActiveDoerUi]
     let routePoints: [CLLocationCoordinate2D]
@@ -116,6 +146,7 @@ struct LiveMapView: UIViewRepresentable {
     func makeUIView(context: Context) -> MKMapView {
         let map = MKMapView()
         map.showsUserLocation = false
+        map.delegate = context.coordinator
         return map
     }
 
@@ -124,30 +155,71 @@ struct LiveMapView: UIViewRepresentable {
         map.removeOverlays(map.overlays)
 
         let validDoers = doers.filter { $0.latitude != 0 && $0.longitude != 0 }
+        let selectedDoer = selectedUserId.flatMap { id in validDoers.first(where: { $0.userId == id }) }
+        let isSelectedTravelling: Bool = {
+            guard let d = selectedDoer else { return false }
+            return d.trackingState == .enRoute || d.trackingState == .clockedIn
+        }()
+
+        // Site marker shown only for the currently selected, still-travelling doer
+        // (once on-site, the doer pin already covers the site location).
+        if let d = selectedDoer, isSelectedTravelling,
+           let lat = d.siteLatitude, let lng = d.siteLongitude, lat != 0, lng != 0 {
+            let site = DoerAnnotation(
+                coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lng),
+                title: d.projectName.isEmpty ? (d.siteName.isEmpty ? "Site" : d.siteName) : d.projectName,
+                subtitle: (d.siteName.isEmpty || d.siteName == d.projectName) ? "Shift location" : d.siteName,
+                trackingState: .idle,
+                isSite: true
+            )
+            map.addAnnotation(site)
+        }
 
         for doer in validDoers {
-            let annotation = MKPointAnnotation()
-            annotation.coordinate = doer.coordinate
-            annotation.title = doer.displayName.isEmpty ? "Doer \(doer.userId.prefix(6))" : doer.displayName
-            annotation.subtitle = "\(doer.statusLabel) | \(doer.projectName)"
+            let title = doer.displayName.isEmpty ? "Doer \(doer.userId.prefix(6))" : doer.displayName
+            var subtitleParts: [String] = [doer.statusLabel]
+            if !doer.timeOnSite.isEmpty { subtitleParts.append(doer.timeOnSite) }
+            if let eta = doer.eta, !eta.isEmpty { subtitleParts.append("ETA: \(eta)") }
+            if !doer.projectName.isEmpty { subtitleParts.append(doer.projectName) }
+            let annotation = DoerAnnotation(
+                coordinate: doer.coordinate,
+                title: String(title),
+                subtitle: subtitleParts.joined(separator: " | "),
+                trackingState: doer.trackingState
+            )
             map.addAnnotation(annotation)
         }
 
-        // Route polyline
+        // Route polyline (only set by viewmodel for travelling doers)
         if !routePoints.isEmpty {
             let polyline = MKPolyline(coordinates: routePoints, count: routePoints.count)
             map.addOverlay(polyline)
         }
 
-        // Fit bounds
-        if !validDoers.isEmpty {
-            var coords = validDoers.map { $0.coordinate }
-            coords.append(contentsOf: routePoints)
-            let region = MKCoordinateRegion(coordinates: coords)
-            map.setRegion(region, animated: true)
+        // Camera logic — mirrors the Android LaunchedEffect:
+        // - one valid point → center+zoom on it
+        // - multiple → fit bounds, optionally including the site when selected+travelling
+        var pointsToFit: [CLLocationCoordinate2D] = []
+        if let d = selectedDoer {
+            pointsToFit.append(d.coordinate)
+            if isSelectedTravelling,
+               let lat = d.siteLatitude, let lng = d.siteLongitude, lat != 0, lng != 0 {
+                pointsToFit.append(CLLocationCoordinate2D(latitude: lat, longitude: lng))
+            }
+            pointsToFit.append(contentsOf: routePoints)
+        } else {
+            pointsToFit = validDoers.map { $0.coordinate }
         }
 
-        map.delegate = context.coordinator
+        if pointsToFit.count == 1 {
+            let region = MKCoordinateRegion(
+                center: pointsToFit[0],
+                latitudinalMeters: 4000, longitudinalMeters: 4000
+            )
+            map.setRegion(region, animated: true)
+        } else if pointsToFit.count > 1 {
+            map.setRegion(MKCoordinateRegion(coordinates: pointsToFit), animated: true)
+        }
     }
 
     func makeCoordinator() -> Coordinator { Coordinator() }
@@ -157,10 +229,33 @@ struct LiveMapView: UIViewRepresentable {
             if let polyline = overlay as? MKPolyline {
                 let renderer = MKPolylineRenderer(polyline: polyline)
                 renderer.strokeColor = UIColor(red: 66/255, green: 133/255, blue: 244/255, alpha: 1)
-                renderer.lineWidth = 5
+                renderer.lineWidth = 6
                 return renderer
             }
             return MKOverlayRenderer(overlay: overlay)
+        }
+
+        func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+            guard let doer = annotation as? DoerAnnotation else { return nil }
+            let identifier = doer.isSite ? "site" : "doer"
+            let view: MKMarkerAnnotationView
+            if let dequeued = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? MKMarkerAnnotationView {
+                dequeued.annotation = annotation
+                view = dequeued
+            } else {
+                view = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: identifier)
+            }
+            view.canShowCallout = true
+            if doer.isSite {
+                view.markerTintColor = .systemRed
+                view.glyphImage = UIImage(systemName: "mappin.and.ellipse")
+                view.displayPriority = .defaultLow
+            } else {
+                view.markerTintColor = markerColor(for: doer.trackingState)
+                view.glyphImage = UIImage(systemName: "figure.walk")
+                view.displayPriority = .required
+            }
+            return view
         }
     }
 }

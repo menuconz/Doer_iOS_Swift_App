@@ -73,6 +73,14 @@ class TrackingNotificationHelper {
                       state: .clockedOut, latitude: latitude, longitude: longitude)
     }
 
+    func onShiftDeleted(shiftId: Int, projectName: String) {
+        let label = projectName.isEmpty ? "the active job" : "\"\(projectName)\""
+        showLocalNotification(id: "doer_tracking_shift_deleted",
+                              title: "Shift removed",
+                              body: "\(label) was deleted — tracking has been stopped.",
+                              priority: .timeSensitive)
+    }
+
     func onGpsPermissionRevoked(shiftId: Int) {
         showLocalNotification(id: "doer_tracking_gps_revoked", title: "Location Permission Required",
                               body: "Location access was revoked. Open Settings to re-enable for tracking.", priority: .timeSensitive)

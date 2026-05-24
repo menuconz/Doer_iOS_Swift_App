@@ -75,6 +75,24 @@ class QuotedLeadsViewModel {
         return Color(argb: argb)
     }
 
+    var dynamicLeadStatuses: [(Int, String)] {
+        let cached = boardConfigCache.getOptions("LeadStatus")
+        return cached.isEmpty ? Self.quotedLeadStatuses : cached.map { ($0.value, $0.displayName) }
+    }
+
+    var dynamicContractTypes: [(Int, String)] {
+        let cached = boardConfigCache.getOptions("ContractType")
+        return cached.isEmpty ? NewLeadsViewModel.contractTypes : cached.map { ($0.value, $0.displayName) }
+    }
+
+    func leadStatusName(_ statusId: Int, fallback: String) -> String {
+        boardConfigCache.displayName("LeadStatus", value: statusId, fallback: fallback)
+    }
+
+    func contractTypeName(_ contractType: Int?, fallback: String) -> String {
+        boardConfigCache.displayName("ContractType", value: contractType ?? -1, fallback: fallback)
+    }
+
     private func argbFromColor(_ c: Color) -> UInt32 {
         let ui = UIColor(c)
         var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0

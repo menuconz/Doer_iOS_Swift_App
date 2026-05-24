@@ -1060,14 +1060,14 @@ class DayDetailViewModel {
             var r = row
             r.shift = enrichedShift
             r.updateToken = UUID()
-            r.statusMessage = Self.getStatusMessage(statusId: enrichedShift.statusId, hasQuotations: row.hasQuotations)
-            r.statusColor = CalendarViewModel.getStatusColor(enrichedShift.statusId, hasQuotations: row.hasQuotations)
-            r.contractTypeText = Self.getContractTypeText(enrichedShift.contractType)
-            r.contractTypeColor = CalendarViewModel.getContractTypeColor(enrichedShift.contractType)
-            r.invoiceStatusText = Self.getInvoiceStatusText(enrichedShift.invoiceStatus)
-            r.invoiceStatusColor = Self.getInvoiceStatusColor(enrichedShift.invoiceStatus)
-            r.hsFormText = Self.getHSFormText(enrichedShift.hsForms)
-            r.hsFormColor = Self.getHSFormColor(enrichedShift.hsForms)
+            r.statusMessage = statusMessageDynamic(enrichedShift.statusId, hasQuotations: row.hasQuotations)
+            r.statusColor = statusColorDynamic(enrichedShift.statusId, hasQuotations: row.hasQuotations)
+            r.contractTypeText = contractTypeTextDynamic(enrichedShift.contractType)
+            r.contractTypeColor = contractTypeColorDynamic(enrichedShift.contractType)
+            r.invoiceStatusText = invoiceStatusTextDynamic(enrichedShift.invoiceStatus)
+            r.invoiceStatusColor = invoiceStatusColorDynamic(enrichedShift.invoiceStatus)
+            r.hsFormText = hsFormTextDynamic(enrichedShift.hsForms)
+            r.hsFormColor = hsFormColorDynamic(enrichedShift.hsForms)
             r.durationFromFormatted = Self.formatDateTime(enrichedShift.durationFrom)
             r.durationToFormatted = Self.formatDateTime(enrichedShift.durationTo)
             return r
@@ -1224,6 +1224,28 @@ class DayDetailViewModel {
     func hsFormColorDynamic(_ value: Int?) -> Color {
         let argb = boardConfigCache.color("HSRequired", value: value ?? -1,
                                           fallback: Self.argbFromColor(Self.getHSFormColor(value)))
+        return Color(argb: argb)
+    }
+
+    func subItemHSTextDynamic(_ value: Int) -> String {
+        boardConfigCache.displayName("HSRequired", value: value,
+                                     fallback: Self.getSubItemHSText(value))
+    }
+
+    func subItemHSColorDynamic(_ value: Int) -> Color {
+        let argb = boardConfigCache.color("HSRequired", value: value,
+                                          fallback: Self.argbFromColor(Self.getSubItemHSColor(value)))
+        return Color(argb: argb)
+    }
+
+    func subItemStatusTextDynamic(_ value: Int) -> String {
+        boardConfigCache.displayName("SubItemStatus", value: value,
+                                     fallback: Self.getSubItemStatusText(value))
+    }
+
+    func subItemStatusColorDynamic(_ value: Int) -> Color {
+        let argb = boardConfigCache.color("SubItemStatus", value: value,
+                                          fallback: Self.argbFromColor(Self.getSubItemStatusColor(value)))
         return Color(argb: argb)
     }
 

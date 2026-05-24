@@ -12,6 +12,7 @@ struct ViewLeadScreen: View {
     @State private var viewModel: ViewLeadViewModel
     @State private var showSnackbar = false
     @State private var snackbarMessage = ""
+    @State private var boardConfigCache: BoardConfigCache = DIContainer.shared.boardConfigCache
 
     init(leadId: Int, onBack: @escaping () -> Void) {
         self.leadId = leadId
@@ -48,7 +49,7 @@ struct ViewLeadScreen: View {
                         ViewLeadPickerField(label: "Owner", value: lead.ownerName.isEmpty ? "Select Owner" : lead.ownerName)
 
                         // Contract Type Section
-                        ViewLeadPickerField(label: "Contract Type", value: viewLeadContractTypeDisplayName(lead.contractType))
+                        ViewLeadPickerField(label: "Contract Type", value: viewModel.contractTypeName(lead.contractType, fallback: viewLeadContractTypeDisplayName(lead.contractType)))
 
                         // Location Section
                         ViewLeadFieldLabel(emoji: "\u{1F4CD}", label: "Location:")
@@ -68,7 +69,7 @@ struct ViewLeadScreen: View {
 
                         // Status Section
                         ViewLeadFieldLabel(emoji: "\u{1F4CA}", label: "Status:")
-                        ViewLeadStatusFrame(statusName: lead.statusName, statusColor: viewModel.leadStatusColor(lead.statusId))
+                        ViewLeadStatusFrame(statusName: viewModel.leadStatusName(lead.statusId, fallback: lead.statusName), statusColor: viewModel.leadStatusColor(lead.statusId))
 
                         // NOTE: Action buttons are commented out in MAUI ViewLead.xaml
                     }
@@ -82,6 +83,9 @@ struct ViewLeadScreen: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .onAppear { viewModel.loadInitialData() }
+        .onChange(of: boardConfigCache.version) { _, _ in
+            // Re-render to pick up admin-renamed dropdown labels.
+        }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: onBack) {

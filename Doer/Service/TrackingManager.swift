@@ -78,9 +78,12 @@ class TrackingManager: ObservableObject {
         // Note: do NOT push status here — we'll transition immediately to .enRoute or
         // .onSite below and push the FINAL state once. Pushing twice in quick succession
         // races on the server and can leave Live Tracking stuck on "Clocked In".
-
-        recordClockEvent(shiftId: shiftId, eventType: .clockIn,
-                         latitude: currentLatitude, longitude: currentLongitude)
+        //
+        // Also: do NOT record the CLOCK_IN event here — defer it until AFTER the
+        // EN_ROUTE/ON_SITE transition so the ClockEvent embeds the final trackingState.
+        // Otherwise the async ClockEvent write can land at the server AFTER the
+        // UpdateTrackingStatus write and overwrite it with "CLOCKED_IN", leaving the
+        // manager's Live Tracking view stuck on "Clocked In" instead of "On the Way".
 
         notificationHelper.onClockIn(shiftId: shiftId, latitude: currentLatitude,
                                       longitude: currentLongitude, projectName: projectName)
@@ -114,6 +117,12 @@ class TrackingManager: ObservableObject {
             startOnSiteMonitoring()
             LocationTrackingService.shared.startTracking(mode: .onSite)
         }
+
+        // Record the CLOCK_IN event AFTER the state has settled on .enRoute / .onSite.
+        // recordClockEvent reads trackingState at queue time, so the embedded state will
+        // be the final one — not the intermediate .clockedIn.
+        recordClockEvent(shiftId: shiftId, eventType: .clockIn,
+                         latitude: currentLatitude, longitude: currentLongitude)
     }
 
     // MARK: - Clock Out
@@ -165,10 +174,15 @@ class TrackingManager: ObservableObject {
 
             // After dwell delay, confirm ON_SITE
             DispatchQueue.main.asyncAfter(deadline: .now() + GeofenceManager.dwellDelay) { [weak self] in
-                if self?.trackingState == .arrived {
-                    _ = self?.transitionTo(.onSite)
-                    self?.pushTrackingStatus()
-                    self?.startOnSiteMonitoring()
+                guard let self else { return }
+                if self.trackingState == .arrived {
+                    _ = self.transitionTo(.onSite)
+                    self.pushTrackingStatus()
+                    // Parity with Android onGeofenceDwell: record a STATE_CHANGE event
+                    // so the timeline of clock events on the server is complete.
+                    self.recordClockEvent(shiftId: shiftId, eventType: .stateChange,
+                                          latitude: latitude, longitude: longitude)
+                    self.startOnSiteMonitoring()
                 }
             }
         } else if trackingState == .leaving {
@@ -301,9 +315,38 @@ class TrackingManager: ObservableObject {
         )
 
         Task {
-            _ = await trackingRepo.updateTrackingStatus(dto)
+            let result = await trackingRepo.updateTrackingStatus(dto)
+            if case .error(_, let err) = result,
+               let nserr = err as NSError?, nserr.code == 404 {
+                // Server says the shift was deleted — tear down local tracking
+                // (parity with Android's handleShiftDeleted path).
+                print("TrackingManager: Active shift \(shiftId) no longer exists on server — stopping tracker")
+                DispatchQueue.main.async { [weak self] in
+                    self?.handleShiftDeleted(shiftId: shiftId)
+                }
+                return
+            }
             print("TrackingManager: Pushed status state=\(state), shiftId=\(shiftId)")
         }
+    }
+
+    /// Called when the server reports (404) that the active shift has been deleted.
+    /// Tears down all local tracking state without attempting further server writes.
+    private func handleShiftDeleted(shiftId: Int) {
+        stopOnSiteMonitoring()
+        cancelGraceTimer()
+        batchLock.lock(); locationBatch.removeAll(); batchLock.unlock()
+        geofenceManager.removeGeofence(shiftId: shiftId)
+        LocationTrackingService.shared.stopTracking()
+        notificationHelper.onShiftDeleted(shiftId: shiftId, projectName: activeProjectName)
+
+        activeShiftId = nil
+        activeProjectName = ""
+        activeSiteLat = nil
+        activeSiteLng = nil
+        activeSubItemId = nil
+        activeSubItemName = nil
+        trackingState = .idle
     }
 
     func flushLocationBatch() {

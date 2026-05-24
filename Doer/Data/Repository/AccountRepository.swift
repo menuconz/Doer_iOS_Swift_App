@@ -9,7 +9,7 @@ class AccountRepository {
         self.prefs = prefs
     }
 
-    func authenticate(userName: String, password: String, deviceToken: String, deviceTypeId: Int = 2) async -> ApiResult<UserDto> {
+    func authenticate(userName: String, password: String, deviceToken: String, deviceTypeId: Int = Constants.deviceTypeIOS) async -> ApiResult<UserDto> {
         do {
             let body = LoginRequestDto(email: userName, password: password, deviceToken: deviceToken, deviceTypeId: deviceTypeId)
             print("[AUTH] Sending login request for: \(userName)")

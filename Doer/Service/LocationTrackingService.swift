@@ -13,6 +13,8 @@ class LocationTrackingService: NSObject, CLLocationManagerDelegate {
     private let trackingManager = TrackingManager.shared
     private var isTracking = false
     private var currentMode: TrackingMode = .enRoute
+    // Mode requested while permission was still being decided — applied once granted.
+    private var pendingStartMode: TrackingMode?
 
     override init() {
         super.init()
@@ -30,7 +32,11 @@ class LocationTrackingService: NSObject, CLLocationManagerDelegate {
 
         let status = locationManager.authorizationStatus
         if status == .notDetermined {
+            // The permission prompt is async — remember the requested mode and let
+            // locationManagerDidChangeAuthorization kick off tracking once granted.
+            pendingStartMode = mode
             locationManager.requestAlwaysAuthorization()
+            return
         }
         guard status == .authorizedAlways || status == .authorizedWhenInUse else {
             print("LocationTrackingService: No location permission")
@@ -98,6 +104,14 @@ class LocationTrackingService: NSObject, CLLocationManagerDelegate {
             if isTracking, let shiftId = trackingManager.activeShiftId {
                 TrackingNotificationHelper.shared.onGpsPermissionRevoked(shiftId: shiftId)
             }
+            pendingStartMode = nil
+            return
+        }
+        // If a start was queued while the user was deciding, fire it now.
+        if (status == .authorizedAlways || status == .authorizedWhenInUse),
+           let mode = pendingStartMode, !isTracking {
+            pendingStartMode = nil
+            startTracking(mode: mode)
         }
     }
 }

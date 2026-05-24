@@ -55,6 +55,7 @@ struct MainLeadsJobsScreen: View {
     @State private var viewModel = MainLeadsJobsViewModel()
     @State private var showSnackbar = false
     @State private var snackbarMessage = ""
+    @State private var boardConfigCache: BoardConfigCache = DIContainer.shared.boardConfigCache
 
     var body: some View {
         ZStack {
@@ -117,6 +118,9 @@ struct MainLeadsJobsScreen: View {
                     }
                 }
             }
+        }
+        .onChange(of: boardConfigCache.version) { _, _ in
+            viewModel.reloadForCacheChange()
         }
         .onChange(of: viewModel.errorMessage) { _, msg in
             if let msg = msg {
@@ -715,10 +719,10 @@ struct MainLeadsJobsScreen: View {
     }
 
     private func subItemDataRow(subItem: ShiftSubItemDto, shiftId: Int) -> some View {
-        let hsText = MainLeadsJobsViewModel.getHSFormText(subItem.hsRequired)
-        let hsColor = MainLeadsJobsViewModel.getHSFormColor(subItem.hsRequired)
-        let statusText = MainLeadsJobsViewModel.getSubItemStatusText(subItem.status)
-        let statusColor = MainLeadsJobsViewModel.getSubItemStatusColor(subItem.status)
+        let hsText = viewModel.hsFormText(subItem.hsRequired)
+        let hsColor = viewModel.hsFormColor(subItem.hsRequired)
+        let statusText = viewModel.subItemStatusText(subItem.status)
+        let statusColor = viewModel.subItemStatusColor(subItem.status)
 
         return HStack(spacing: 0) {
             // Sub-item name + message icon
@@ -1075,7 +1079,7 @@ struct MainLeadsJobsScreen: View {
         case .contractTypePicker:
             MLStatusPickerSheet(
                 title: "Contract Type",
-                items: MainLeadsJobsViewModel.contractTypeOptions.map { ($0.value, $0.name, $0.color) },
+                items: viewModel.dynamicContractTypeOptions().map { ($0.value, $0.name, $0.color) },
                 onSelect: { value in
                     viewModel.selectContractType(value)
                 },
@@ -1084,7 +1088,7 @@ struct MainLeadsJobsScreen: View {
         case .invoiceStatusPicker:
             MLStatusPickerSheet(
                 title: "Invoice Status",
-                items: MainLeadsJobsViewModel.invoiceStatusOptions.map { ($0.value, $0.name, $0.color) },
+                items: viewModel.dynamicInvoiceStatusOptions().map { ($0.value, $0.name, $0.color) },
                 onSelect: { value in
                     viewModel.selectInvoiceStatus(value)
                 },
@@ -1093,7 +1097,7 @@ struct MainLeadsJobsScreen: View {
         case .hsFormStatusPicker:
             MLStatusPickerSheet(
                 title: "H&S Form Status",
-                items: MainLeadsJobsViewModel.hsFormOptions.map { ($0.value, $0.name, $0.color) },
+                items: viewModel.dynamicHSFormOptions().map { ($0.value, $0.name, $0.color) },
                 onSelect: { value in
                     viewModel.selectHSFormStatus(value)
                 },
@@ -1102,7 +1106,7 @@ struct MainLeadsJobsScreen: View {
         case .subItemHSPicker:
             MLStatusPickerSheet(
                 title: "H&S Status",
-                items: MainLeadsJobsViewModel.hsFormOptions.map { ($0.value, $0.name, $0.color) },
+                items: viewModel.dynamicHSFormOptions().map { ($0.value, $0.name, $0.color) },
                 onSelect: { value in
                     viewModel.selectSubItemHSStatus(value)
                 },
@@ -1111,7 +1115,7 @@ struct MainLeadsJobsScreen: View {
         case .subItemStatusPicker:
             MLStatusPickerSheet(
                 title: "Sub-Item Status",
-                items: MainLeadsJobsViewModel.subItemStatusOptions.map { ($0.value, $0.name, $0.color) },
+                items: viewModel.dynamicSubItemStatusOptions().map { ($0.value, $0.name, $0.color) },
                 onSelect: { value in
                     viewModel.selectSubItemStatus(value)
                 },

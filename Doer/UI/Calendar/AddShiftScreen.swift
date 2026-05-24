@@ -6,6 +6,7 @@ struct AddShiftScreen: View {
     var hour: Int? = nil
     @State private var viewModel: AddShiftViewModel
     @State private var toastMessage: String? = nil
+    @State private var boardConfigCache: BoardConfigCache = DIContainer.shared.boardConfigCache
 
     init(path: Binding<NavigationPath>, date: String? = nil, hour: Int? = nil) {
         self._path = path
@@ -246,6 +247,9 @@ struct AddShiftScreen: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(false)
         .onAppear { viewModel.loadInitialData() }
+        .onChange(of: boardConfigCache.version) { _, _ in
+            // Re-render so AddShiftViewModel.contractTypes (cache-aware) refreshes.
+        }
         .onChange(of: viewModel.isSuccess) { _, newValue in
             if newValue {
                 // Pop back to Calendar screen (matching Android behavior)

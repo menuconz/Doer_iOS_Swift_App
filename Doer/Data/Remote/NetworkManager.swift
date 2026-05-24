@@ -286,11 +286,18 @@ class NetworkManager {
             )
             .validate()
             .responseString { response in
+                let statusCode = response.response?.statusCode ?? 0
                 switch response.result {
                 case .success(let value):
                     continuation.resume(returning: value)
                 case .failure(let error):
-                    continuation.resume(throwing: error)
+                    // Surface the HTTP status code as NSError.code so callers can detect
+                    // specific failures like 404 (e.g. shift deleted on the server).
+                    let body = response.data.flatMap { String(data: $0, encoding: .utf8) }?
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                        .trimmingCharacters(in: CharacterSet(charactersIn: "\"")) ?? error.localizedDescription
+                    continuation.resume(throwing: NSError(domain: "", code: statusCode,
+                        userInfo: [NSLocalizedDescriptionKey: body]))
                 }
             }
         }

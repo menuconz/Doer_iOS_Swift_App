@@ -40,18 +40,17 @@ class FirebaseMessagingService: NSObject, UNUserNotificationCenterDelegate, Mess
         Task {
             let email = prefs.email
             guard !email.isEmpty else { return }
-            let body = LoginRequestDto(
-                email: email,
-                password: "",
-                deviceToken: token,
-                deviceTypeId: 2
-            )
+            // iOS-side registrations MUST use Constants.deviceTypeIOS (1). Sending
+            // 2 here (the Android value) makes the server think this device is an
+            // Android phone, so APNs payloads are never produced for it and iOS
+            // never receives notifications.
             _ = await DIContainer.shared.accountRepository.authenticate(
                 userName: email,
                 password: "",
-                deviceToken: token
+                deviceToken: token,
+                deviceTypeId: Constants.deviceTypeIOS
             )
-            print("FCM token updated on server")
+            print("FCM token updated on server (deviceTypeId=\(Constants.deviceTypeIOS) iOS)")
         }
     }
 

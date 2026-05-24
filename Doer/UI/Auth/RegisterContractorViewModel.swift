@@ -145,7 +145,7 @@ class RegisterContractorViewModel {
                     password: password,
                     email: email.trimmingCharacters(in: .whitespaces),
                     deviceToken: deviceToken,
-                    deviceTypeId: 2,
+                    deviceTypeId: Constants.deviceTypeIOS,
                     address: searchAddress,
                     latitude: latitude,
                     longitude: longitude,

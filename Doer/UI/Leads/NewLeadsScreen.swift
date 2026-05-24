@@ -23,6 +23,8 @@ struct NewLeadsScreen: View {
     @State private var viewModel = NewLeadsViewModel()
     @State private var showSnackbar = false
     @State private var snackbarMessage = ""
+    // Observed so picker option lists and status labels refresh when admin renames dropdowns.
+    @State private var boardConfigCache: BoardConfigCache = DIContainer.shared.boardConfigCache
 
     var body: some View {
         ZStack {
@@ -72,7 +74,7 @@ struct NewLeadsScreen: View {
                                             EditableCellView(text: lead.ownerName, width: colOwner) {
                                                 viewModel.startEdit(lead, .owner)
                                             }
-                                            SolidColorCellView(text: lead.statusName, width: colStatus, bgColor: viewModel.leadStatusColor(lead.statusId)) {
+                                            SolidColorCellView(text: viewModel.leadStatusName(lead.statusId, fallback: lead.statusName), width: colStatus, bgColor: viewModel.leadStatusColor(lead.statusId)) {
                                                 viewModel.startEdit(lead, .status)
                                             }
                                             EditableCellView(text: lead.costFromQuote != nil ? "\(lead.costFromQuote!)" : "", width: colCost) {
@@ -84,7 +86,7 @@ struct NewLeadsScreen: View {
                                             EditableCellView(text: lead.location, width: colLocation) {
                                                 viewModel.startEdit(lead, .location)
                                             }
-                                            SolidColorCellView(text: lead.contractTypeName, width: colContractType, bgColor: viewModel.contractTypeColorDynamic(lead.contractType)) {
+                                            SolidColorCellView(text: viewModel.contractTypeName(lead.contractType, fallback: lead.contractTypeName), width: colContractType, bgColor: viewModel.contractTypeColorDynamic(lead.contractType)) {
                                                 viewModel.startEdit(lead, .contractType)
                                             }
                                             DataCellView(text: viewModel.formatDate(lead.createdDate), width: colCreatedDate)
@@ -132,6 +134,11 @@ struct NewLeadsScreen: View {
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(true)
             .onAppear { viewModel.refresh() }
+            .onChange(of: boardConfigCache.version) { _, _ in
+                // Cache changed (admin renamed dropdowns) — re-render picks up new
+                // labels via viewModel.dynamicLeadStatuses/dynamicContractTypes/etc.
+                viewModel.refresh()
+            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: onOpenDrawer) {
@@ -198,13 +205,14 @@ struct NewLeadsScreen: View {
                 )
             case .status:
                 StatusBottomSheetView(
-                    statuses: NewLeadsViewModel.leadStatuses,
+                    statuses: viewModel.dynamicLeadStatuses,
                     onSelect: { viewModel.selectLeadStatus($0) },
                     onDismiss: { viewModel.cancelEdit() },
                     colorProvider: { viewModel.leadStatusColor($0) }
                 )
             case .contractType:
                 ContractTypeBottomSheetView(
+                    contractTypes: viewModel.dynamicContractTypes,
                     onSelect: { viewModel.selectContractType($0) },
                     onDismiss: { viewModel.cancelEdit() },
                     colorProvider: { viewModel.contractTypeColorDynamic($0) }
@@ -434,6 +442,7 @@ struct StatusBottomSheetView: View {
 }
 
 struct ContractTypeBottomSheetView: View {
+    let contractTypes: [(Int, String)]
     let onSelect: (Int) -> Void
     let onDismiss: () -> Void
     var colorProvider: (Int) -> Color = { NewLeadsViewModel.getContractTypeColor($0) }
@@ -454,7 +463,7 @@ struct ContractTypeBottomSheetView: View {
 
             ScrollView {
                 VStack(spacing: 10) {
-                    ForEach(NewLeadsViewModel.contractTypes, id: \.0) { id, name in
+                    ForEach(contractTypes, id: \.0) { id, name in
                         Button(action: { onSelect(id) }) {
                             Text(name)
                                 .foregroundColor(.white)

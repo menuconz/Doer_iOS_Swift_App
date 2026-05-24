@@ -11,6 +11,7 @@ struct ShiftDetailsScreen: View {
     // Skip refresh on the first appearance (init already loaded). Refresh on
     // subsequent appearances — i.e., when returning from feedback/reviews/edit.
     @State private var hasInitiallyAppeared = false
+    @State private var boardConfigCache: BoardConfigCache = DIContainer.shared.boardConfigCache
 
     init(path: Binding<NavigationPath>, shiftId: Int) {
         self._path = path
@@ -269,6 +270,9 @@ struct ShiftDetailsScreen: View {
             } else {
                 hasInitiallyAppeared = true
             }
+        }
+        .onChange(of: boardConfigCache.version) { _, _ in
+            viewModel.refresh()
         }
         .onChange(of: viewModel.isDeleted) { _, newValue in
             if newValue { path.removeLast() }

@@ -9,6 +9,14 @@ struct DoerApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
 
     init() {
+        // Clear Keychain on first launch after (re)install. iOS preserves Keychain
+        // items across app deletion, which would otherwise leave a stale
+        // `is_logged_in` flag and auto-login the user on reinstall.
+        if !UserDefaults.standard.bool(forKey: "has_launched_before") {
+            SecureStorageManager.shared.clear()
+            UserDefaults.standard.set(true, forKey: "has_launched_before")
+        }
+
         // Configure navigation bar appearance
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
