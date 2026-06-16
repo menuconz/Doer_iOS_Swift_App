@@ -88,12 +88,17 @@ struct RegisterContractorScreen: View {
                             DatePicker(
                                 "Date of Birth",
                                 selection: $viewModel.selectedDate,
+                                in: ...Date(),   // disallow future dates in the picker itself
                                 displayedComponents: .date
                             )
                             .datePickerStyle(.graphical)
                             .onChange(of: viewModel.selectedDate) { _, newValue in
                                 viewModel.onDateSelected(newValue)
                             }
+                        }
+
+                        if let error = viewModel.dobError {
+                            Text(error).font(.caption).foregroundColor(.red)
                         }
                     }
 
@@ -107,9 +112,13 @@ struct RegisterContractorScreen: View {
                         .focused($focusedField, equals: .phone)
                         .textFieldStyle(.roundedBorder)
 
-                        Text("Optional but required to get contacted for jobs")
-                            .font(.caption)
-                            .foregroundColor(.gray)
+                        if let error = viewModel.phoneError {
+                            Text(error).font(.caption).foregroundColor(.red)
+                        } else {
+                            Text("Optional but required to get contacted for jobs")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
                     }
 
                     // Address

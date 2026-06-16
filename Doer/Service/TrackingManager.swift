@@ -30,6 +30,12 @@ class TrackingManager: ObservableObject {
     static let thresholdHours: Double = 12.0
     static let warningHours: Double = 11.0
 
+    // Real-time heartbeat: while clocked in, push the current position to the server on a
+    // fixed interval (not just on state changes / every 5 GPS points) so the manager's
+    // Live Tracking map stays fresh. Also flushes any buffered location points.
+    private var heartbeatTimer: Timer?
+    static let heartbeatSeconds: TimeInterval = 15
+
     var activeProjectName: String = ""
     static let geofenceExpirationHours: TimeInterval = 12 * 60 * 60
     private var geofenceExpirationTimer: Timer?
@@ -123,6 +129,9 @@ class TrackingManager: ObservableObject {
         // be the final one — not the intermediate .clockedIn.
         recordClockEvent(shiftId: shiftId, eventType: .clockIn,
                          latitude: currentLatitude, longitude: currentLongitude)
+
+        // Begin pushing live position on a fixed interval so the manager map stays current.
+        startHeartbeat()
     }
 
     // MARK: - Clock Out
@@ -137,6 +146,7 @@ class TrackingManager: ObservableObject {
         _ = transitionTo(.clockedOut)
         pushTrackingStatus()
 
+        stopHeartbeat()
         stopOnSiteMonitoring()
         cancelGraceTimer()
 
@@ -258,6 +268,25 @@ class TrackingManager: ObservableObject {
         return Date().timeIntervalSince(start) / 3600.0
     }
 
+    // MARK: - Real-time Heartbeat
+
+    /// Starts a repeating timer that pushes the current tracking status (position + state)
+    /// and flushes buffered location points, so the manager's live map updates in near
+    /// real time rather than only on state changes / every 5th GPS point.
+    private func startHeartbeat() {
+        stopHeartbeat()
+        heartbeatTimer = Timer.scheduledTimer(withTimeInterval: TrackingManager.heartbeatSeconds, repeats: true) { [weak self] _ in
+            guard let self, self.activeShiftId != nil else { return }
+            self.pushTrackingStatus()
+            self.flushLocationBatch()
+        }
+    }
+
+    private func stopHeartbeat() {
+        heartbeatTimer?.invalidate()
+        heartbeatTimer = nil
+    }
+
     // MARK: - Location Batching
 
     func addLocationPoint(_ point: LocationPointDto) {
@@ -333,6 +362,7 @@ class TrackingManager: ObservableObject {
     /// Called when the server reports (404) that the active shift has been deleted.
     /// Tears down all local tracking state without attempting further server writes.
     private func handleShiftDeleted(shiftId: Int) {
+        stopHeartbeat()
         stopOnSiteMonitoring()
         cancelGraceTimer()
         batchLock.lock(); locationBatch.removeAll(); batchLock.unlock()

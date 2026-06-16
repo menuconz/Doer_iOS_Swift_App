@@ -14,6 +14,8 @@ class RegisterContractorViewModel {
     var confirmPassword: String = ""
     var nameError: String? = nil
     var emailError: String? = nil
+    var phoneError: String? = nil
+    var dobError: String? = nil
     var passwordError: String? = nil
     var confirmPasswordError: String? = nil
     var documents: [(data: Data, fileName: String)] = []
@@ -42,7 +44,7 @@ class RegisterContractorViewModel {
 
     func onNameChange(_ value: String) { fullName = value; nameError = nil }
     func onEmailChange(_ value: String) { email = value; emailError = nil }
-    func onPhoneChange(_ value: String) { phone = value }
+    func onPhoneChange(_ value: String) { phone = value; phoneError = nil }
     func onDateOfBirthChange(_ value: String) { dateOfBirth = value }
     func onPasswordChange(_ value: String) { password = value; passwordError = nil }
     func onConfirmPasswordChange(_ value: String) { confirmPassword = value; confirmPasswordError = nil }
@@ -52,6 +54,7 @@ class RegisterContractorViewModel {
         formatter.dateFormat = "dd/MM/yyyy"
         dateOfBirth = formatter.string(from: date)
         selectedDate = date
+        dobError = ValidationUtils.dateOfBirthError(date, minimumAge: 18)
         showDatePicker = false
     }
 
@@ -95,24 +98,17 @@ class RegisterContractorViewModel {
     }
 
     func register() {
-        var hasError = false
+        // Run all field validations up front so every problem is shown at once.
+        // Phone is optional (validated only when entered); DOB requires minimum age 18.
+        nameError = ValidationUtils.nameError(fullName, fieldName: "Full name")
+        emailError = ValidationUtils.emailError(email)
+        phoneError = ValidationUtils.phoneError(phone)
+        dobError = dateOfBirth.isEmpty ? nil : ValidationUtils.dateOfBirthError(selectedDate, minimumAge: 18)
+        passwordError = ValidationUtils.passwordError(password)
+        confirmPasswordError = (confirmPassword != password) ? "Passwords do not match" : nil
 
-        if fullName.trimmingCharacters(in: .whitespaces).isEmpty {
-            nameError = "Name is required"; hasError = true
-        }
-        if email.trimmingCharacters(in: .whitespaces).isEmpty {
-            emailError = "Email is required"; hasError = true
-        } else if !isValidEmail(email) {
-            emailError = "Invalid email format"; hasError = true
-        }
-        if password.trimmingCharacters(in: .whitespaces).isEmpty {
-            passwordError = "Password is required"; hasError = true
-        } else if password.count < 6 {
-            passwordError = "Password must be at least 6 characters"; hasError = true
-        }
-        if confirmPassword != password {
-            confirmPasswordError = "Passwords do not match"; hasError = true
-        }
+        let hasError = [nameError, emailError, phoneError, dobError, passwordError, confirmPasswordError]
+            .contains { $0 != nil }
         if hasError { return }
 
         isLoading = true
@@ -168,11 +164,5 @@ class RegisterContractorViewModel {
                 errorMessage = "Registration failed. Please try again."
             }
         }
-    }
-
-    private func isValidEmail(_ email: String) -> Bool {
-        let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
-        let predicate = NSPredicate(format: "SELF MATCHES %@", emailRegex)
-        return predicate.evaluate(with: email)
     }
 }

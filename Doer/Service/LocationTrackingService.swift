@@ -80,8 +80,20 @@ class LocationTrackingService: NSObject, CLLocationManagerDelegate {
 
     // MARK: - CLLocationManagerDelegate
 
+    // Reject fixes worse than this so the live map doesn't jump to bad/old GPS points.
+    // 165 m covers the on-site mode's ~100 m desired accuracy while filtering out junk fixes.
+    private static let maxAcceptableAccuracy: CLLocationAccuracy = 165
+
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
+
+        // Drop invalid (negative accuracy) or low-accuracy fixes — these cause the
+        // manager's live map to show an inaccurate / jumping position.
+        guard location.horizontalAccuracy >= 0,
+              location.horizontalAccuracy <= Self.maxAcceptableAccuracy else {
+            print("LocationTrackingService: dropped low-accuracy fix (\(location.horizontalAccuracy)m)")
+            return
+        }
 
         let point = LocationPointDto(
             latitude: location.coordinate.latitude,
@@ -91,7 +103,12 @@ class LocationTrackingService: NSObject, CLLocationManagerDelegate {
             speed: Float(max(0, location.speed)),
             bearing: Float(max(0, location.course))
         )
-        trackingManager.addLocationPoint(point)
+        // CoreLocation may deliver callbacks off the main thread. TrackingManager's
+        // mutable state (last-known location, batch, timers) is otherwise touched on the
+        // main thread, so hop to main to avoid data races / instability during tracking.
+        DispatchQueue.main.async { [weak self] in
+            self?.trackingManager.addLocationPoint(point)
+        }
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {

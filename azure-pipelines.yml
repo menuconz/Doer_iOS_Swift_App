@@ -8,7 +8,7 @@ pool:
 
 variables:
   applicationId: 'nz.co.doer'
-  versionNumber: '2.2'
+  versionNumber: '2.3'
   buildConfiguration: 'Release'
 
 stages:

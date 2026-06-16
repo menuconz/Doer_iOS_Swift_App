@@ -19,9 +19,18 @@ packages:
   Alamofire:
     url: https://github.com/Alamofire/Alamofire
     from: "5.9.0"
+  # Pin the Maps SDK to match the Navigation SDK binary (9.1.1). The Nav SDK only
+  # requests Maps `from: 9.1.1`, so SwiftPM otherwise drifts to 9.4.0, which dropped
+  # the `GoogleMapsBase` module that the Nav 9.1.1 binary still imports → build break.
+  ios-maps-sdk:
+    url: https://github.com/googlemaps/ios-maps-sdk
+    exactVersion: "9.1.1"
   ios-navigation-sdk:
     url: https://github.com/googlemaps/ios-navigation-sdk
     exactVersion: "9.1.1"
+  firebase-ios-sdk:
+    url: https://github.com/firebase/firebase-ios-sdk
+    exactVersion: "12.11.0"
 
 targets:
   Doer:
@@ -41,7 +50,20 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: false
         INFOPLIST_FILE: Doer/Info.plist
+        # Wire the push-notification entitlement so the build applies aps-environment.
+        # Without this XcodeGen drops it → "no valid aps-environment entitlement" → no APNs/iOS push.
+        CODE_SIGN_ENTITLEMENTS: Doer/Doer.entitlements
     dependencies:
       - package: Alamofire
+      - package: ios-maps-sdk
+        product: GoogleMaps
       - package: ios-navigation-sdk
         product: GoogleNavigation
+      - package: firebase-ios-sdk
+        product: FirebaseCore
+      - package: firebase-ios-sdk
+        product: FirebaseCrashlytics
+      - package: firebase-ios-sdk
+        product: FirebaseMessaging
+      - package: firebase-ios-sdk
+        product: FirebaseAnalytics

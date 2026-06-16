@@ -31,7 +31,7 @@ steps:
   - task: InstallAppleProvisioningProfile@1
     inputs:
       provisioningProfileLocation: 'secureFiles'
-      provProfileSecureFile: 'DoerApp_Distribution_2026_May.mobileprovision'
+      provProfileSecureFile: 'DoerApp_Distribution_2026_June.mobileprovision'
     displayName: 'Install Provisioning Profile'
 
   # Stamp version
@@ -92,7 +92,7 @@ steps:
           <key>provisioningProfiles</key>
           <dict>
               <key>nz.co.doer</key>
-              <string>DoerApp_Distribution_2026_May</string>
+              <string>DoerApp_Distribution_2026_June</string>
           </dict>
       </dict>
       </plist>

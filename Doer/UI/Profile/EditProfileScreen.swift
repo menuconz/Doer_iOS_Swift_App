@@ -32,6 +32,8 @@ struct EditProfileScreen: View {
                         // Name Field (always visible)
                         EditProfileFieldLabel("\u{1F464}", "Name")
                         EditProfileBorderedEntryField(value: $viewModel.name, placeholder: "Enter Name")
+                            .onChange(of: viewModel.name) { _, _ in viewModel.nameError = nil }
+                        FieldError(viewModel.nameError)
 
                         // Address Field (Customer only, with Google Places)
                         if viewModel.isCustomer {
@@ -77,15 +79,20 @@ struct EditProfileScreen: View {
                                     .cornerRadius(12)
                             }
                             .shadow(radius: 1)
+                            FieldError(viewModel.dobError)
                         }
 
                         // Email Field (always visible)
                         EditProfileFieldLabel("\u{1F4E7}", "Email")
                         EditProfileBorderedEntryField(value: $viewModel.email, placeholder: "Enter Email")
+                            .onChange(of: viewModel.email) { _, _ in viewModel.emailError = nil }
+                        FieldError(viewModel.emailError)
 
                         // Phone Number Field (always visible)
                         EditProfileFieldLabel("\u{1F4F1}", "Phone Number")
                         EditProfileBorderedEntryField(value: $viewModel.phone, placeholder: "Enter Phone Number")
+                            .onChange(of: viewModel.phone) { _, _ in viewModel.phoneError = nil }
+                        FieldError(viewModel.phoneError)
 
                         // Caregiver-only fields
                         if viewModel.isCaregiver {
@@ -256,7 +263,7 @@ struct EditProfileScreen: View {
         }
         .sheet(isPresented: $showDatePicker) {
             VStack {
-                DatePicker("Date of Birth", selection: $selectedDate, displayedComponents: .date)
+                DatePicker("Date of Birth", selection: $selectedDate, in: ...Date(), displayedComponents: .date)
                     .datePickerStyle(.graphical)
                     .padding()
                 HStack {
@@ -319,6 +326,22 @@ struct EditProfileScreen: View {
             get: { viewModel.errorMessage },
             set: { _ in viewModel.clearError() }
         ))
+    }
+}
+
+// MARK: - Inline Field Error
+/// Shows a red validation message under a field, or nothing when `message` is nil.
+private struct FieldError: View {
+    let message: String?
+    init(_ message: String?) { self.message = message }
+
+    var body: some View {
+        if let message {
+            Text(message)
+                .font(.caption)
+                .foregroundColor(.red)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
     }
 }
 

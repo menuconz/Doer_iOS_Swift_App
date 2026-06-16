@@ -5,6 +5,7 @@ struct DoerNavHost: View {
     @State private var showDrawer = false
     @State private var isLoggedIn: Bool? = nil
     @State private var unreadNotificationCount = 0
+    @State private var showLogoutConfirm = false
 
     private let prefs = PreferencesManager.shared
     private let secureStorage = SecureStorageManager.shared
@@ -97,12 +98,19 @@ struct DoerNavHost: View {
                         path = newPath
                     },
                     onLogout: {
+                        // Close the drawer first, then ask for confirmation before logging out.
                         withAnimation { showDrawer = false }
-                        doLogout()
+                        showLogoutConfirm = true
                     }
                 )
                 .transition(.move(edge: .leading))
             }
+        }
+        .alert("Logout", isPresented: $showLogoutConfirm) {
+            Button("Cancel", role: .cancel) { }
+            Button("Logout", role: .destructive) { doLogout() }
+        } message: {
+            Text("Are you sure you want to logout?")
         }
     }
 

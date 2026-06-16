@@ -21,6 +21,10 @@ class EditProfileViewModel {
     var newDocuments: [(data: Data, fileName: String)] = []
     var errorMessage: String? = nil
     var successMessage: String? = nil
+    var nameError: String? = nil
+    var emailError: String? = nil
+    var phoneError: String? = nil
+    var dobError: String? = nil
     var userId: String = ""
     var searchAddress: String = ""
     var placeList: [PlacePrediction] = []
@@ -113,6 +117,18 @@ class EditProfileViewModel {
         isoFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
         dateOfBirth = displayFormatter.string(from: date)
         dateOfBirthRaw = isoFormatter.string(from: date)
+        dobError = ValidationUtils.dateOfBirthError(date)
+    }
+
+    /// Validates the currently-entered date of birth (parsed from the dd/MM/yyyy display string).
+    /// Returns nil when empty (DOB is optional) or valid.
+    private func currentDobError() -> String? {
+        guard !dateOfBirth.isEmpty else { return nil }
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "dd/MM/yyyy"
+        guard let date = formatter.date(from: dateOfBirth) else { return nil }
+        return ValidationUtils.dateOfBirthError(date)
     }
 
     // Google Places - matching MAUI OnSearchAddressChanged + GetSearchList
@@ -178,6 +194,19 @@ class EditProfileViewModel {
 
     // Matching MAUI UpdateProfilePage command
     func saveProfile() {
+        // Validate before saving. Phone is optional (validated only when entered);
+        // DOB applies to non-customer roles where the field is shown.
+        nameError = ValidationUtils.nameError(name, fieldName: "Name")
+        emailError = ValidationUtils.emailError(email)
+        phoneError = ValidationUtils.phoneError(phone)
+        dobError = isCustomer ? nil : currentDobError()
+
+        if let firstError = [nameError, emailError, phoneError, dobError].compactMap({ $0 }).first {
+            // Surface via the snackbar too, in case the offending field is scrolled off-screen.
+            errorMessage = firstError
+            return
+        }
+
         isSaving = true
         errorMessage = nil
 

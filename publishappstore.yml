@@ -9,7 +9,7 @@ steps:
   - task: InstallAppleProvisioningProfile@1
     inputs:
       provisioningProfileLocation: 'secureFiles'
-      provProfileSecureFile: 'DoerApp_Distribution_2026_May.mobileprovision'
+      provProfileSecureFile: 'DoerApp_Distribution_2026_June.mobileprovision'
 
   - script: |
       echo "List contents of the Build.ArtifactStagingDirectory"

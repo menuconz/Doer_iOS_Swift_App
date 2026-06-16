@@ -313,6 +313,12 @@ class SubItemMessagesViewModel {
                     attachments: attachments
                 )
             } else {
+                // TODO(CON-UAT-401): A text-only sub-item update wrongly posts to the SHIFT-LEVEL
+                // feed because there is no "new sub-item email (no attachment)" endpoint, so this
+                // falls back to `sendNewEmail` (no subItemId). Pending backend confirmation of the
+                // sub-item route (likely `EmailMessages/send-new-subitem`, to be wired via the
+                // already-defined-but-unused `NewSubItemEmailRequestDto`). Until then this still
+                // misroutes text-only updates. The with-attachment path above is correct.
                 let request = NewEmailRequestDto(
                     jobId: jobIdToUse,
                     toEmail: toEmail,

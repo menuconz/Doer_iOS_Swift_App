@@ -47,10 +47,8 @@ class ForgotPasswordViewModel {
     }
 
     func generateOtp() {
-        if email.trimmingCharacters(in: .whitespaces).isEmpty {
-            emailError = "Email is required"
-            return
-        }
+        emailError = ValidationUtils.emailError(email)
+        if emailError != nil { return }
 
         isLoading = true
         errorMessage = nil
@@ -76,11 +74,8 @@ class ForgotPasswordViewModel {
         if otp.trimmingCharacters(in: .whitespaces).isEmpty {
             otpError = "OTP is required"; hasError = true
         }
-        if newPassword.trimmingCharacters(in: .whitespaces).isEmpty {
-            passwordError = "Password is required"; hasError = true
-        } else if newPassword.count < 6 {
-            passwordError = "Password must be at least 6 characters"; hasError = true
-        }
+        passwordError = ValidationUtils.passwordError(newPassword)
+        if passwordError != nil { hasError = true }
         if confirmPassword != newPassword {
             confirmPasswordError = "Passwords do not match"; hasError = true
         }

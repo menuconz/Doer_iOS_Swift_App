@@ -22,6 +22,10 @@ class AccountRepository {
                 let errorMsg = responseString.trimmingCharacters(in: .whitespacesAndNewlines)
                     .trimmingCharacters(in: CharacterSet(charactersIn: "\""))
                 print("[AUTH] HTTP error: \(errorMsg)")
+                // 401 means bad credentials — never surface the raw server/JSON body to the user.
+                if statusCode == 401 {
+                    return .error("Invalid email or password.")
+                }
                 return .error(errorMsg.isEmpty ? "Please enter correct email or password" : errorMsg)
             }
             if responseString.isEmpty {

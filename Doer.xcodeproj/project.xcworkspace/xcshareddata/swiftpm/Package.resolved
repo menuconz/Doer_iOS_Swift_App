@@ -1,5 +1,5 @@
 {
-  "originHash" : "4676993e0cf5d4d3fd374165458c8cb9e1102f6e8b5542a19c64b245f6c535c6",
+  "originHash" : "217a836ac10a268a20ea9112faab752527a8745434e27887b21257c968bac1cd",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -42,8 +42,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/googleads/google-ads-on-device-conversion-ios-sdk",
       "state" : {
-        "revision" : "7b722132d1f2ab421c88a2e5c384c984cebd0d00",
-        "version" : "3.4.0"
+        "revision" : "23fa6970874ec8f3ac0039b3778ca8d6545d50ee",
+        "version" : "3.4.2"
       }
     },
     {
@@ -87,8 +87,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/google/gtm-session-fetcher.git",
       "state" : {
-        "revision" : "a883ddb9fd464216133a5ab441f1ae8995978573",
-        "version" : "5.1.0"
+        "revision" : "c0ac7575d70050c2973ba2318bd5af47f8e8153a",
+        "version" : "5.3.0"
       }
     },
     {
@@ -105,8 +105,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/googlemaps/ios-maps-sdk",
       "state" : {
-        "revision" : "02f8f144ef266da44d50a68d1562ca051bac27cc",
-        "version" : "9.4.0"
+        "revision" : "3786e5028d868482ef88140117d33efd60828300",
+        "version" : "9.1.1"
       }
     },
     {
@@ -114,8 +114,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/googlemaps/ios-navigation-sdk",
       "state" : {
-        "revision" : "7b1442f9bf6fc419dbb92ade15315b6a6f7c01b1",
-        "version" : "9.4.0"
+        "revision" : "94555972da3a767932f2f3f15d75bd9d63bb5d5b",
+        "version" : "9.1.1"
       }
     },
     {
